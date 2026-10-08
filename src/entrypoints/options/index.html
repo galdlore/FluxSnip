@@ -8,7 +8,25 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <h1>FluxSnip</h1>
+    <div class="app-container">
+      <header class="app-header">
+        <div class="header-brand">
+          <img src="/icon/32.png" alt="FluxSnip" class="brand-logo" width="28" height="28" />
+          <h1 class="brand-title">FluxSnip</h1>
+          <span class="brand-version">v0.1.0</span>
+        </div>
+        <nav class="app-nav">
+          <button class="nav-tab active" data-tab="gmail" id="tab-gmail" data-i18n="options_tab_gmail">Gmail</button>
+          <button class="nav-tab" data-tab="teams" id="tab-teams" data-i18n="options_tab_teams">Teams</button>
+          <button class="nav-tab" data-tab="chat" id="tab-chat" data-i18n="options_tab_chat">Google Chat</button>
+          <button class="nav-tab" data-tab="settings" id="tab-settings" data-i18n="options_tab_settings">Settings</button>
+          <button class="nav-tab" data-tab="backup" id="tab-backup" data-i18n="options_tab_backup">Backup</button>
+        </nav>
+      </header>
+      <main id="views-container" class="views-container">
+        <!-- Rendered view injected dynamically -->
+      </main>
+    </div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
