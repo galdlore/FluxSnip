@@ -158,5 +158,15 @@
   "editor_table_insert_col_right": { "message": "Insert Column Right" },
   "editor_table_delete_row": { "message": "Delete Row" },
   "editor_table_delete_col": { "message": "Delete Column" },
-  "editor_table_delete_table": { "message": "Delete Table" }
+  "editor_table_delete_table": { "message": "Delete Table" },
+  "picker_search_placeholder": { "message": "Search templates..." },
+  "picker_hint_select": { "message": "Select" },
+  "picker_hint_insert": { "message": "Insert" },
+  "picker_hint_close": { "message": "Close" },
+  "picker_no_templates": { "message": "No matching templates found." },
+  "picker_open_options": { "message": "Open Options to create templates" },
+  "toast_clipboard_ready": { "message": "Copied to clipboard. Press Ctrl+V to paste." },
+  "toast_fields_failed": { "message": "Could not set some header fields: $1" },
+  "toast_insert_failed": { "message": "Failed to insert template content." },
+  "toast_unexpected_error": { "message": "An unexpected error occurred during insertion." }
 }

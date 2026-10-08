@@ -158,5 +158,15 @@
   "editor_table_insert_col_right": { "message": "右に列を挿入" },
   "editor_table_delete_row": { "message": "行を削除" },
   "editor_table_delete_col": { "message": "列を削除" },
-  "editor_table_delete_table": { "message": "テーブルを削除" }
+  "editor_table_delete_table": { "message": "テーブルを削除" },
+  "picker_search_placeholder": { "message": "テンプレートを検索..." },
+  "picker_hint_select": { "message": "選択" },
+  "picker_hint_insert": { "message": "挿入" },
+  "picker_hint_close": { "message": "閉じる" },
+  "picker_no_templates": { "message": "一致するテンプレートがありません。" },
+  "picker_open_options": { "message": "オプションを開いて作成する" },
+  "toast_clipboard_ready": { "message": "クリップボードにコピーしました。Ctrl+V で貼り付けてください。" },
+  "toast_fields_failed": { "message": "一部の宛先・件名フィールドを設定できませんでした: $1" },
+  "toast_insert_failed": { "message": "テンプレートの挿入に失敗しました。" },
+  "toast_unexpected_error": { "message": "テンプレート挿入中に予期せぬエラーが発生しました。" }
 }

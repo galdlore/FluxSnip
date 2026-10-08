@@ -314,7 +314,7 @@ function isSafeUrl(url: string): boolean {
  * Builds DOM DocumentFragment safely using createElement/createTextNode only.
  * Safe for content scripts (Trusted Types compliant).
  */
-export function astToDom(nodes: AstNode[], doc: Document): DocumentFragment {
+export function astToDom(nodes: AstNode[], doc: Document = typeof document !== 'undefined' ? document : ({} as Document)): DocumentFragment {
   const fragment = doc.createDocumentFragment();
 
   function buildNode(n: AstNode): Node | null {
