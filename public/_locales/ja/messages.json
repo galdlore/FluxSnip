@@ -1,0 +1,10 @@
+{
+  "ext_name": {
+    "message": "FluxSnip",
+    "description": "拡張機能名"
+  },
+  "ext_description": {
+    "message": "Gmail・Microsoft Teams・Google Chat 用のキーワード展開定型文ツール",
+    "description": "拡張機能の説明"
+  }
+}

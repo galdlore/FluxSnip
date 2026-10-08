@@ -1,0 +1,10 @@
+{
+  "ext_name": {
+    "message": "FluxSnip",
+    "description": "Extension name"
+  },
+  "ext_description": {
+    "message": "Keyword-triggered text templates for Gmail, Microsoft Teams and Google Chat.",
+    "description": "Extension description"
+  }
+}
