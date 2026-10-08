@@ -6,5 +6,45 @@
   "ext_description": {
     "message": "Gmail・Microsoft Teams・Google Chat 用のキーワード展開定型文ツール",
     "description": "拡張機能の説明"
+  },
+  "validate_name_required": {
+    "message": "名前は必須です。",
+    "description": "名前が未入力の場合のエラー"
+  },
+  "validate_name_too_long": {
+    "message": "名前は100文字以内で入力してください。",
+    "description": "名前が長すぎる場合のエラー"
+  },
+  "validate_keyword_required": {
+    "message": "キーワードは必須です。",
+    "description": "キーワードが未入力の場合のエラー"
+  },
+  "validate_keyword_invalid": {
+    "message": "キーワードの形式が不正です（半角英数記号 _-;:.!/@# のみ、1〜32文字）。",
+    "description": "キーワード形式不正のエラー"
+  },
+  "validate_keyword_duplicate": {
+    "message": "このプラットフォームで同じキーワードが既に存在します。",
+    "description": "キーワード重複時のエラー"
+  },
+  "validate_body_too_large": {
+    "message": "本文サイズが上限（200KB）を超えています。",
+    "description": "本文サイズ超過時のエラー"
+  },
+  "validate_from_invalid": {
+    "message": "差出人（From）メールアドレスの形式が正しくありません。",
+    "description": "From不正時のエラー"
+  },
+  "validate_to_invalid": {
+    "message": "宛先（To）に含まれるメールアドレスの形式が正しくありません。",
+    "description": "To不正時のエラー"
+  },
+  "validate_cc_invalid": {
+    "message": "宛先（Cc）に含まれるメールアドレスの形式が正しくありません。",
+    "description": "Cc不正時のエラー"
+  },
+  "validate_bcc_invalid": {
+    "message": "宛先（Bcc）に含まれるメールアドレスの形式が正しくありません。",
+    "description": "Bcc不正時のエラー"
   }
 }

@@ -6,5 +6,45 @@
   "ext_description": {
     "message": "Keyword-triggered text templates for Gmail, Microsoft Teams and Google Chat.",
     "description": "Extension description"
+  },
+  "validate_name_required": {
+    "message": "Name is required.",
+    "description": "Validation error when name is empty"
+  },
+  "validate_name_too_long": {
+    "message": "Name must be 100 characters or fewer.",
+    "description": "Validation error when name exceeds 100 characters"
+  },
+  "validate_keyword_required": {
+    "message": "Keyword is required.",
+    "description": "Validation error when keyword is empty"
+  },
+  "validate_keyword_invalid": {
+    "message": "Keyword contains invalid characters. Use alphanumeric or _-;:.!/@#",
+    "description": "Validation error when keyword format is invalid"
+  },
+  "validate_keyword_duplicate": {
+    "message": "Keyword already exists for this platform.",
+    "description": "Validation error when keyword is duplicate"
+  },
+  "validate_body_too_large": {
+    "message": "Template body exceeds maximum size (200KB).",
+    "description": "Validation error when body size exceeds limit"
+  },
+  "validate_from_invalid": {
+    "message": "From address is not a valid email.",
+    "description": "Validation error when from email is invalid"
+  },
+  "validate_to_invalid": {
+    "message": "One or more To recipient emails are invalid.",
+    "description": "Validation error when to recipient email is invalid"
+  },
+  "validate_cc_invalid": {
+    "message": "One or more Cc recipient emails are invalid.",
+    "description": "Validation error when cc recipient email is invalid"
+  },
+  "validate_bcc_invalid": {
+    "message": "One or more Bcc recipient emails are invalid.",
+    "description": "Validation error when bcc recipient email is invalid"
   }
 }
