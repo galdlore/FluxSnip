@@ -107,6 +107,27 @@ describe('gmail adapter and compose detection', () => {
     expect(vars.from?.email).toBe('me@example.com');
   });
 
+  it('collectVars extracts Japanese lastName from real PeopleKit data-name attribute', async () => {
+    const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+    dialog.innerHTML = `
+      <div role="option" class="afV" data-hovercard-id="kj.tadokoro@sunace-corp.com" data-name="田所 功次">
+        <div class="afZ af1">
+          <div class="akl">田所 功次</div>
+          <div class="akk">（sunace-corp.com）</div>
+        </div>
+      </div>
+      <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      <div id="gmail-popup-body" contenteditable="true" role="textbox" aria-label="メッセージ本文"></div>
+    `;
+
+    const bodyEl = document.getElementById('gmail-popup-body') as HTMLElement;
+    const vars = await gmailAdapter.collectVars(bodyEl);
+    expect(vars.to?.email).toBe('kj.tadokoro@sunace-corp.com');
+    expect(vars.to?.name).toBe('田所 功次');
+    expect(vars.to?.lastName).toBe('田所');
+    expect(vars.to?.firstName).toBe('功次');
+  });
+
   it('applyFields applies subject and recipient fields without error', async () => {
     const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
     dialog.insertAdjacentHTML('beforeend', `

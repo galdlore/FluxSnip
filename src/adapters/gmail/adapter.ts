@@ -1,4 +1,5 @@
 import type { PlatformAdapter } from '@/core/adapter';
+import { sleep } from '@/core/dom';
 import { splitName } from '@/core/engine';
 import type { GmailTemplate, Person, Template, TemplateVars } from '@/core/types';
 import { findComposeRoot, findGmailBody } from './compose';
@@ -24,7 +25,13 @@ export const gmailAdapter: PlatformAdapter = {
     const vars: Partial<TemplateVars> = {};
 
     // 1. First To recipient
-    const toRecipients = readRecipients(root, 'to');
+    let toRecipients = readRecipients(root, 'to');
+    if (toRecipients.length > 0 && !toRecipients[0]?.name) {
+      // Wait briefly for PeopleKit / Google Contacts to populate contact display name
+      await sleep(100);
+      toRecipients = readRecipients(root, 'to');
+    }
+
     const firstTo = toRecipients[0];
     if (firstTo) {
       const person: Person = {

@@ -84,6 +84,9 @@ export const SEL = {
     ],
     // Chip elements inside recipient fields
     chip: [
+      'div[role="option"][data-hovercard-id]',
+      'div.afV[data-hovercard-id]',
+      'div.afV',
       'div.afZ',
       'div[peoplekit-id="hyPgpe"]',
       'div[data-hovercard-id]',
@@ -91,12 +94,15 @@ export const SEL = {
     ],
     // Email text element within chip
     chipEmail: [
-      'div.akl',
       '[email]',
       '[data-hovercard-id]',
+      'div.akl',
+      'div.akk',
     ],
     // Display name element within chip
     chipName: [
+      '[data-name]',
+      'div.akl',
       'div.akk',
       '[name]',
     ],

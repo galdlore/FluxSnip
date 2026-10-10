@@ -58,39 +58,74 @@ function getRecipientContainer(root: HTMLElement, kind: RecipientKind): HTMLElem
  */
 export function readRecipients(root: HTMLElement, kind: RecipientKind): { email: string; name?: string }[] {
   const container = getRecipientContainer(root, kind);
-  if (!container) return [];
+  const chips = container ? qAll(container, SEL.recipients.chip) : [];
+
+  // Fallback: If no chips found in container (or kind is 'to' and collapsed), check collapsed header
+  if (chips.length === 0 && kind === 'to') {
+    const collapsedHeader = q<HTMLElement>(root, SEL.recipients.collapsedHeader);
+    if (collapsedHeader) {
+      const headerChips = qAll(collapsedHeader, ['span[email]', 'span[data-hovercard-id]', 'span']);
+      for (const span of headerChips) {
+        const emailAttr = span.getAttribute('email') || span.getAttribute('data-hovercard-id') || '';
+        const match = emailAttr.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+        if (match) {
+          const rawText = span.textContent?.trim() || '';
+          // Clean "(...)" from display name, e.g. "田所 功次 (gmail.com)" -> "田所 功次"
+          const cleanName = rawText.replace(/\s*[\(（][^\)）]*[\)）]\s*/g, '').replace(match[0], '').trim();
+          return [{ email: match[0], name: cleanName || undefined }];
+        }
+      }
+    }
+  }
 
   const results: { email: string; name?: string }[] = [];
-  const chips = qAll(container, SEL.recipients.chip);
+  const seenEmails = new Set<string>();
 
   for (const chip of chips) {
-    let email = '';
-    let name = '';
-
-    // 1. Email extraction
-    const emailEl = q(chip, SEL.recipients.chipEmail);
-    if (emailEl) {
-      email = emailEl.getAttribute('email') || emailEl.getAttribute('data-hovercard-id') || emailEl.textContent?.trim() || '';
-    } else {
-      email = chip.getAttribute('email') || chip.getAttribute('data-hovercard-id') || '';
+    let rawEmail = chip.getAttribute('data-hovercard-id') || chip.getAttribute('email') || '';
+    if (!rawEmail) {
+      const emailAttrEl = q(chip, ['[data-hovercard-id]', '[email]']);
+      if (emailAttrEl) {
+        rawEmail = emailAttrEl.getAttribute('data-hovercard-id') || emailAttrEl.getAttribute('email') || '';
+      }
     }
 
-    // 2. Name extraction
-    const nameEl = q(chip, SEL.recipients.chipName);
-    if (nameEl) {
-      name = nameEl.getAttribute('name') || nameEl.textContent?.trim() || '';
-    } else {
-      name = chip.getAttribute('name') || '';
+    let rawName = chip.getAttribute('data-name') || chip.getAttribute('name') || '';
+    if (!rawName) {
+      const nameAttrEl = q(chip, ['[data-name]', '[name]']);
+      if (nameAttrEl) {
+        rawName = nameAttrEl.getAttribute('data-name') || nameAttrEl.getAttribute('name') || '';
+      }
     }
 
-    // Clean up email
-    const match = email.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
-    if (match) {
-      email = match[0];
+    // Check text contents of candidate elements (.akl, .akk, etc.)
+    const textEls = Array.from(chip.querySelectorAll('.akl, .akk, [data-name], [name], div, span'));
+    for (const el of textEls) {
+      const text = el.textContent?.trim() || '';
+      if (!text) continue;
+
+      if (!rawEmail && text.includes('@')) {
+        const m = text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+        if (m) rawEmail = m[0];
+      } else if (!rawName && !text.includes('@')) {
+        const cleaned = text.replace(/\s*[\(（][^\)）]*[\)）]\s*/g, '').trim();
+        if (cleaned && !cleaned.includes('@')) {
+          rawName = cleaned;
+        }
+      }
     }
 
-    if (email) {
-      results.push({ email, name: name || undefined });
+    const emailMatch = rawEmail.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    if (emailMatch) {
+      const email = emailMatch[0];
+      let name = rawName.replace(/\s*[\(（][^\)）]*[\)）]\s*/g, '').trim();
+      if (name.toLowerCase() === email.toLowerCase()) {
+        name = '';
+      }
+      if (!seenEmails.has(email.toLowerCase())) {
+        seenEmails.add(email.toLowerCase());
+        results.push({ email, name: name || undefined });
+      }
     }
   }
 
