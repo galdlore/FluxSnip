@@ -88,9 +88,50 @@ describe('gmail adapter and compose detection', () => {
     expect(root?.getAttribute('role')).toBe('dialog');
   });
 
-  it('collectVars returns empty object in T05', async () => {
+  it('collectVars extracts To and From variables when present', async () => {
+    const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+    dialog.insertAdjacentHTML('beforeend', `
+      <input type="hidden" name="from" value="me@example.com" />
+      <div class="afZ" data-hovercard-id="tanaka@example.com">
+        <div class="akl">tanaka@example.com</div>
+        <div class="akk">田中 太郎</div>
+      </div>
+      <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+    `);
+
     const bodyEl = document.getElementById('gmail-popup-body') as HTMLElement;
     const vars = await gmailAdapter.collectVars(bodyEl);
-    expect(vars).toEqual({});
+    expect(vars.to?.email).toBe('tanaka@example.com');
+    expect(vars.to?.lastName).toBe('田中');
+    expect(vars.to?.firstName).toBe('太郎');
+    expect(vars.from?.email).toBe('me@example.com');
+  });
+
+  it('applyFields applies subject and recipient fields without error', async () => {
+    const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+    dialog.insertAdjacentHTML('beforeend', `
+      <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+    `);
+
+    const bodyEl = document.getElementById('gmail-popup-body') as HTMLElement;
+    const template: any = {
+      id: 'test-1',
+      platform: 'gmail',
+      name: 'Test',
+      keyword: ';test',
+      tags: [],
+      bodyHtml: '<p>Test</p>',
+      bodyAst: [],
+      createdAt: 100,
+      updatedAt: 100,
+      subject: { mode: 'replace', value: 'Updated Subject' },
+      to: { mode: 'append', emails: ['new@example.com'] },
+    };
+
+    const res = await gmailAdapter.applyFields!(bodyEl, template);
+    expect(res.failed).toEqual([]);
+
+    const subj = document.querySelector('input[name="subjectbox"]') as HTMLInputElement;
+    expect(subj.value).toBe('Updated Subject');
   });
 });

@@ -1,10 +1,7 @@
 /**
- * CSS Selectors for Gmail Web interface.
+ * CSS Selectors for Gmail Web interface (mail.google.com).
  * All selectors for Gmail must be defined in this file ONLY.
- * Priority order:
- *  1. Semantic attributes (name, role, g_editable, contenteditable)
- *  2. Accessibility labels (aria-label in Japanese and English)
- *  3. Obfuscated class names (.Am, .M9, etc.) as the very last fallback.
+ * Based on real-world DOM snapshots (including PeopleKit components).
  */
 
 export const SEL = {
@@ -17,7 +14,7 @@ export const SEL = {
     'div[contenteditable="true"][role="textbox"]',
     'div[contenteditable="true"][aria-label*="本文"]',
     'div[contenteditable="true"][aria-label*="Body"]',
-    // Fallback obfuscated class names (last resort)
+    // Fallback obfuscated class names
     'div.Am.Al.editable[contenteditable="true"]',
     'div.editable[contenteditable="true"]',
   ],
@@ -26,6 +23,7 @@ export const SEL = {
    * Subject box input within compose window.
    */
   subjectBox: [
+    'input[name="subjectbox"].aoT',
     'input[name="subjectbox"]',
     'input[name="subject"]',
   ],
@@ -41,6 +39,101 @@ export const SEL = {
     'div.M9',
     'table.aoI',
   ],
+
+  /**
+   * Recipient input fields (PeopleKit component).
+   */
+  recipients: {
+    toInput: [
+      'input.agP.aFx[aria-label*="To"]',
+      'input[peoplekit-id][aria-label*="To"]',
+      'input[aria-label*="To の宛先"]',
+      'input[aria-label*="To recipients"]',
+      'input[name="to"]',
+    ],
+    ccInput: [
+      'input.agP.aFx[aria-label*="Cc"]',
+      'input[peoplekit-id][aria-label*="Cc"]',
+      'input[aria-label*="Cc の宛先"]',
+      'input[aria-label*="Cc recipients"]',
+      'input[name="cc"]',
+    ],
+    bccInput: [
+      'input.agP.aFx[aria-label*="Bcc"]',
+      'input[peoplekit-id][aria-label*="Bcc"]',
+      'input[aria-label*="Bcc の宛先"]',
+      'input[aria-label*="Bcc recipients"]',
+      'input[name="bcc"]',
+    ],
+    // Buttons to expand Cc / Bcc rows
+    ccToggle: [
+      'span[role="link"][data-tooltip*="Cc"]',
+      'span[role="link"][aria-label*="Cc"]',
+      'span.aB.gQ.pE',
+    ],
+    bccToggle: [
+      'span[role="link"][data-tooltip*="Bcc"]',
+      'span[role="link"][aria-label*="Bcc"]',
+      'span.aB.gQ.pB',
+    ],
+    // Chip elements inside recipient fields
+    chip: [
+      'div.afZ',
+      'div[peoplekit-id="hyPgpe"]',
+      'div[data-hovercard-id]',
+      'span[email]',
+    ],
+    // Email text element within chip
+    chipEmail: [
+      'div.akl',
+      '[email]',
+      '[data-hovercard-id]',
+    ],
+    // Display name element within chip
+    chipName: [
+      'div.akk',
+      '[name]',
+    ],
+    // Delete cross button within chip
+    chipDeleteBtn: [
+      'div.afX[aria-label*="Delete"]',
+      'div.afX[aria-label*="削除"]',
+      'div[peoplekit-id="bxvLg"]',
+      'div.afX',
+    ],
+  },
+
+  /**
+   * From alias selection components.
+   */
+  from: {
+    // Hidden input containing current From address
+    hiddenInput: [
+      'input[type="hidden"][name="from"]',
+      'input[name="from"]',
+    ],
+    // Display button to open From dropdown
+    triggerButton: [
+      'tr.zm div[role="button"][aria-haspopup="true"]',
+      'div.az3 div[role="button"]',
+      'div.J-JN-M-I[aria-haspopup="true"]',
+    ],
+    // Current From display label
+    currentDisplay: [
+      'span.az1',
+      'div.J-JN-M-I-Jm',
+    ],
+    // Popup menu container and option items
+    menuContainer: [
+      'div.J-M[role="menu"]',
+      'div[role="menu"][aria-haspopup="true"]',
+    ],
+    menuItem: [
+      'div[role="menuitem"][value]',
+      'div.J-N[value]',
+      'div[role="menuitem"]',
+    ],
+  },
 
   /**
    * Inputs to ignore (search bar, etc.)
@@ -64,10 +157,28 @@ export function q<T extends Element = HTMLElement>(
       const el = root.querySelector(selector);
       if (el) return el as unknown as T;
     } catch {
-      // Ignore invalid selector in older browsers
+      // Ignore
     }
   }
   return null;
+}
+
+/**
+ * Queries all matching elements for the provided selector candidates.
+ */
+export function qAll<T extends Element = HTMLElement>(
+  root: ParentNode,
+  keys: readonly string[]
+): T[] {
+  for (const selector of keys) {
+    try {
+      const list = root.querySelectorAll(selector);
+      if (list.length > 0) return Array.from(list) as unknown as T[];
+    } catch {
+      // Ignore
+    }
+  }
+  return [];
 }
 
 /**
@@ -78,7 +189,7 @@ export function matchesAny(el: Element, keys: readonly string[]): boolean {
     try {
       if (el.matches(selector)) return true;
     } catch {
-      // Ignore match errors
+      // Ignore
     }
   }
   return false;
