@@ -70,7 +70,27 @@ export async function insertContent(
 
       if (method === 'insertText') {
         const beforeText = editor.innerText || editor.textContent || '';
-        const success = document.execCommand('insertText', false, plainText);
+        let success = false;
+
+        if (useChatText && plainText.includes('\n')) {
+          // In Google Chat, dispatch line-by-line with insertLineBreak (Shift+Enter equivalent) to prevent premature submission
+          const lines = plainText.split('\n');
+          success = true;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i]) {
+              success = document.execCommand('insertText', false, lines[i]) && success;
+            }
+            if (i < lines.length - 1) {
+              const brSuccess = document.execCommand('insertLineBreak');
+              if (!brSuccess) {
+                document.execCommand('insertParagraph');
+              }
+            }
+          }
+        } else {
+          success = document.execCommand('insertText', false, plainText);
+        }
+
         await sleep(30);
 
         const afterText = editor.innerText || editor.textContent || '';
