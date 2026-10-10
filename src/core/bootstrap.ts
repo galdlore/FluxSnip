@@ -86,6 +86,13 @@ export function startContent(adapters: PlatformAdapter[]): () => void {
       if (!active) return;
 
       const { adapter, editor } = active;
+
+      // Tab expansion strictly applies when typing directly inside the body editor (not header fields)
+      const currentActive = deepActiveElement();
+      if (!currentActive || !editor.contains(currentActive)) {
+        return;
+      }
+
       const templates = templatesCache[adapter.platform] ?? [];
       const tokenRange = tryExpand(e, adapter, editor, templates);
 
@@ -118,11 +125,14 @@ export function startContent(adapters: PlatformAdapter[]): () => void {
       e.preventDefault();
       e.stopImmediatePropagation();
 
-      // Save caret range before opening picker steals focus
+      const rawActive = deepActiveElement();
       const savedRange = getCaretRange();
       let anchorRect: DOMRect;
 
-      if (savedRange) {
+      if (rawActive && rawActive instanceof HTMLElement && !editor.contains(rawActive)) {
+        // Focused on header field (e.g. To, Cc, Subject): anchor popup near the active field
+        anchorRect = rawActive.getBoundingClientRect();
+      } else if (savedRange) {
         const rect = savedRange.getBoundingClientRect();
         if (rect.width > 0 || rect.height > 0) {
           anchorRect = rect;
@@ -133,13 +143,16 @@ export function startContent(adapters: PlatformAdapter[]): () => void {
         anchorRect = editor.getBoundingClientRect();
       }
 
-      // Fallback target range if caret was lost
-      const targetRange = savedRange ?? (() => {
-        const r = document.createRange();
-        r.selectNodeContents(editor);
-        r.collapse(false);
-        return r;
-      })();
+      // Target range for template insertion (must be valid inside editor)
+      const targetRange =
+        savedRange && editor.contains(savedRange.commonAncestorContainer)
+          ? savedRange
+          : (() => {
+              const r = document.createRange();
+              r.selectNodeContents(editor);
+              r.collapse(false);
+              return r;
+            })();
 
       const templates = templatesCache[adapter.platform] ?? [];
 
@@ -155,7 +168,11 @@ export function startContent(adapters: PlatformAdapter[]): () => void {
           }
         },
         onClose: () => {
-          editor.focus();
+          if (rawActive && rawActive instanceof HTMLElement && rawActive.isConnected) {
+            rawActive.focus();
+          } else {
+            editor.focus();
+          }
         },
       });
     }

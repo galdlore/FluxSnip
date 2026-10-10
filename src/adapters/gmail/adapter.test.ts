@@ -81,6 +81,25 @@ describe('gmail adapter and compose detection', () => {
     expect(found).toBeNull();
   });
 
+  it('finds compose body when node is inside To recipient or Subject inputs within compose window', () => {
+    const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+    const bodyEl = document.getElementById('gmail-popup-body');
+
+    const toInput = document.createElement('input');
+    toInput.className = 'agP aFx';
+    toInput.setAttribute('peoplekit-id', 'BbVjBd');
+    toInput.setAttribute('aria-label', 'To の宛先');
+    dialog.appendChild(toInput);
+
+    const subjectInput = document.createElement('input');
+    subjectInput.name = 'subjectbox';
+    subjectInput.className = 'aoT';
+    dialog.appendChild(subjectInput);
+
+    expect(gmailAdapter.findEditor(toInput)).toBe(bodyEl);
+    expect(gmailAdapter.findEditor(subjectInput)).toBe(bodyEl);
+  });
+
   it('findComposeRoot correctly identifies dialog container', () => {
     const childP = document.getElementById('popup-child-p');
     const root = findComposeRoot(childP);
