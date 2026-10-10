@@ -35,12 +35,12 @@ export const UI_STYLES = `
   max-height: 480px;
   display: flex;
   flex-direction: column;
-  background: hsl(240, 20%, 9% / 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid hsl(240, 20%, 30% / 0.5);
+  background: hsl(240, 22%, 11% / 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid hsl(262, 85%, 66% / 0.65);
   border-radius: 12px;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px hsl(262, 85%, 66% / 0.2);
+  box-shadow: 0 20px 60px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
   overflow: hidden;
   animation: picker-in 120ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

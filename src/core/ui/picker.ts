@@ -277,45 +277,82 @@ export function openPicker(opts: PickerOptions): { close(): void } {
     opts.onSelect(t);
   }
 
-  function close() {
+  function handleGlobalKey(e: KeyboardEvent) {
     if (isClosed) return;
-    isClosed = true;
-    host.remove();
-    opts.onClose();
-  }
 
-  // Keyboard navigation
-  searchInput.addEventListener('input', () => {
-    filteredTemplates = filterAndSortTemplates(opts.templates, searchInput.value);
-    selectedIndex = 0;
-    renderList();
-  });
-
-  searchInput.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       if (filteredTemplates.length > 0) {
         selectedIndex = (selectedIndex + 1) % filteredTemplates.length;
         updateSelectionHighlight();
         scrollSelectedIntoView();
       }
-    } else if (e.key === 'ArrowUp') {
+      return;
+    }
+
+    if (e.key === 'ArrowUp') {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       if (filteredTemplates.length > 0) {
         selectedIndex = (selectedIndex - 1 + filteredTemplates.length) % filteredTemplates.length;
         updateSelectionHighlight();
         scrollSelectedIntoView();
       }
-    } else if (e.key === 'Enter') {
+      return;
+    }
+
+    if (e.key === 'Enter') {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       const current = filteredTemplates[selectedIndex];
       if (current) {
         selectItem(current);
       }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      close();
+      return;
     }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      close();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return;
+    }
+
+    // Auto-focus search input if user starts typing printable character
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (shadow.activeElement !== searchInput) {
+        searchInput.focus();
+      }
+    }
+  }
+
+  window.addEventListener('keydown', handleGlobalKey, true);
+
+  function close() {
+    if (isClosed) return;
+    isClosed = true;
+    window.removeEventListener('keydown', handleGlobalKey, true);
+    host.remove();
+    opts.onClose();
+  }
+
+  // Search input change filtering
+  searchInput.addEventListener('input', () => {
+    filteredTemplates = filterAndSortTemplates(opts.templates, searchInput.value);
+    selectedIndex = 0;
+    renderList();
   });
 
   backdrop.addEventListener('click', (e) => {
@@ -325,7 +362,9 @@ export function openPicker(opts: PickerOptions): { close(): void } {
   });
 
   renderList();
-  searchInput.focus();
+  setTimeout(() => {
+    searchInput.focus();
+  }, 10);
 
   return { close };
 }
