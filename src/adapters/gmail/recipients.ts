@@ -294,9 +294,6 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
       await sleep(15);
     }
 
-    // Dismiss any autocomplete popup suggestions before typing
-    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, which: 27, bubbles: true }));
-
     // Guard: Only use execCommand if inputEl actually gained focus!
     // Prevents leaking email into the email body editor.
     const hasFocus = document.activeElement === inputEl;
