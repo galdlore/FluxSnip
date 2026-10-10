@@ -259,35 +259,60 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
       await sleep(15);
     }
 
+    // Dismiss any autocomplete popup suggestions before typing
+    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, which: 27, bubbles: true }));
+
     // Guard: Only use execCommand if inputEl actually gained focus!
     // Prevents leaking email into the email body editor.
     const hasFocus = document.activeElement === inputEl;
     let inserted = false;
 
+    // 1. Insert pure email address
     if (hasFocus && typeof document.execCommand === 'function') {
       try {
-        inserted = document.execCommand('insertText', false, `${email}, `);
+        inserted = document.execCommand('insertText', false, email);
       } catch {
         inserted = false;
       }
     }
 
     if (!inserted) {
-      inputEl.value = `${email}, `;
+      inputEl.value = email;
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
       inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    // Trigger Enter keydown for chip conversion
-    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-    inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+    await sleep(20);
+
+    // 2. Commit as chip using comma delimiter
+    // IMPORTANT: Do NOT send Enter key! Enter selects the top suggestion from autocomplete!
+    // In Gmail PeopleKit, typing comma or dispatching Comma triggers chip conversion cleanly.
+    let commaInserted = false;
+    if (document.activeElement === inputEl && typeof document.execCommand === 'function') {
+      try {
+        commaInserted = document.execCommand('insertText', false, ',');
+      } catch {
+        commaInserted = false;
+      }
+    }
+
+    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: ',', code: 'Comma', keyCode: 188, which: 188, bubbles: true }));
+    inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: ',', code: 'Comma', keyCode: 188, which: 188, bubbles: true }));
+
+    if (!commaInserted) {
+      inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ',' }));
+    }
+
+    await sleep(20);
+
+    // 3. Native blur to finalize chip creation and dismiss dropdown
+    try {
+      inputEl.blur();
+    } catch {}
+    inputEl.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
 
     await sleep(30);
   }
-
-  // Final blur / focus transition to trigger pending chips
-  inputEl.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-  await sleep(30);
 
   return true;
 }
