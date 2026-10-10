@@ -19,19 +19,25 @@ export async function insertContent(
   for (const method of order) {
     try {
       if (method === 'dom') {
-        const sel = window.getSelection();
+        const doc = editor.ownerDocument || document;
+        const win = doc.defaultView || window;
+        const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
         const range = sel.getRangeAt(0);
         range.deleteContents();
 
-        const domNode = astToDom(content.ast, editor.ownerDocument);
+        const domNode = astToDom(content.ast, doc);
         range.insertNode(domNode);
 
         // Move caret after inserted node
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        try {
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch {
+          // Ignore range collapse/addRange failure
+        }
 
         dispatchInput(editor, 'insertFromPaste');
         return { ok: true, method: 'dom' };

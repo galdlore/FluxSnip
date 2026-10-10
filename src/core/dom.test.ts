@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deepActiveElement, isEditable, sleep, waitFor } from './dom';
+import { deepActiveElement, isEditable, restoreRange, sleep, waitFor } from './dom';
 
 describe('dom utils', () => {
   it('sleep delays execution', async () => {
@@ -51,5 +51,58 @@ describe('dom utils', () => {
     expect(active === innerInput || active === host).toBe(true);
 
     host.remove();
+  });
+
+  it('restoreRange handles disconnected editor safely without throwing', () => {
+    const disconnectedEditor = document.createElement('div');
+    disconnectedEditor.setAttribute('contenteditable', 'true');
+    const range = document.createRange();
+
+    expect(() => {
+      restoreRange(disconnectedEditor, range);
+    }).not.toThrow();
+  });
+
+  it('restoreRange handles disconnected or foreign range safely and falls back', () => {
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    document.body.appendChild(editor);
+
+    const foreignDiv = document.createElement('div');
+    const detachedRange = document.createRange();
+    detachedRange.selectNodeContents(foreignDiv);
+
+    expect(() => {
+      restoreRange(editor, detachedRange);
+    }).not.toThrow();
+
+    editor.remove();
+  });
+
+  it('restoreRange safely catches DOMException from Selection.addRange without bubbling', () => {
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    document.body.appendChild(editor);
+
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+
+    const sel = window.getSelection();
+    if (sel) {
+      const origAddRange = sel.addRange;
+      sel.addRange = () => {
+        throw new DOMException("The given range isn't in document", 'InvalidStateError');
+      };
+
+      try {
+        expect(() => {
+          restoreRange(editor, range);
+        }).not.toThrow();
+      } finally {
+        sel.addRange = origAddRange;
+      }
+    }
+
+    editor.remove();
   });
 });

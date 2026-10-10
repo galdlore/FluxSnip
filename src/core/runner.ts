@@ -66,11 +66,19 @@ export async function runTemplate(
     const rendered = renderTemplate(template, vars);
 
     // 4. Restore range in editor
-    restoreRange(editor, range);
+    let targetEditor = editor;
+    if (!targetEditor.isConnected && adapter.findEditor) {
+      const activeEl = document.activeElement;
+      const reFound = adapter.findEditor(activeEl);
+      if (reFound && reFound.isConnected) {
+        targetEditor = reFound;
+      }
+    }
+    restoreRange(targetEditor, range);
 
     // 5. Insert content into editor
     const isChat = adapter.platform === 'chat';
-    const result = await insertContent(editor, rendered, adapter.insertOrder, isChat);
+    const result = await insertContent(targetEditor, rendered, adapter.insertOrder, isChat);
 
     if (!result.ok) {
       showToast(

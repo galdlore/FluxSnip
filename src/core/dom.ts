@@ -75,10 +75,12 @@ export function dispatchInput(el: HTMLElement, inputType: string = 'insertText')
 /**
  * Gets a clone of the current caret Range, if any.
  */
-export function getCaretRange(): Range | null {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
+export function getCaretRange(target?: Node | null): Range | null {
   try {
+    const doc = (target && 'ownerDocument' in target && target.ownerDocument) ? target.ownerDocument : document;
+    const win = doc.defaultView || window;
+    const sel = win.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
     return sel.getRangeAt(0).cloneRange();
   } catch {
     return null;
@@ -88,25 +90,65 @@ export function getCaretRange(): Range | null {
 /**
  * Restores selection to the given Range in the editor.
  * If the range is disconnected or invalid, positions caret at the end of the editor.
+ * Guarantees zero unhandled exceptions even if DOMException is thrown by Selection.addRange.
  */
-export function restoreRange(editor: HTMLElement, range: Range): void {
-  editor.focus();
-  const sel = window.getSelection();
-  if (!sel) return;
+export function restoreRange(editor: HTMLElement, range?: Range | null): void {
+  try {
+    if (!editor || !editor.isConnected) {
+      return;
+    }
 
-  sel.removeAllRanges();
+    editor.focus();
 
-  const isConnected =
-    range.startContainer.isConnected &&
-    (editor.contains(range.startContainer) || editor === range.startContainer);
+    const doc = editor.ownerDocument || document;
+    const win = doc.defaultView || window;
+    const sel = win.getSelection();
+    if (!sel) return;
 
-  if (isConnected) {
-    sel.addRange(range);
-  } else {
-    // Fallback: place caret at the end of the editor
-    const fallbackRange = document.createRange();
-    fallbackRange.selectNodeContents(editor);
-    fallbackRange.collapse(false);
-    sel.addRange(fallbackRange);
+    try {
+      sel.removeAllRanges();
+    } catch {
+      // Ignore errors when clearing selection
+    }
+
+    let restored = false;
+
+    // Check if range is valid, belongs to the same document, and is fully connected inside editor
+    if (
+      range &&
+      range.startContainer &&
+      range.endContainer &&
+      range.startContainer.ownerDocument === doc &&
+      range.endContainer.ownerDocument === doc &&
+      range.startContainer.isConnected &&
+      range.endContainer.isConnected &&
+      (editor.contains(range.startContainer) || editor === range.startContainer) &&
+      (editor.contains(range.endContainer) || editor === range.endContainer)
+    ) {
+      try {
+        sel.addRange(range);
+        restored = true;
+      } catch {
+        // addRange might throw DOMException ("The given range isn't in document")
+        restored = false;
+      }
+    }
+
+    // Fallback: place caret at the end of the editor if range restoration failed
+    if (!restored && editor.isConnected) {
+      try {
+        const fallbackRange = doc.createRange();
+        fallbackRange.selectNodeContents(editor);
+        fallbackRange.collapse(false);
+        try {
+          sel.removeAllRanges();
+        } catch {}
+        sel.addRange(fallbackRange);
+      } catch {
+        // Silently swallow any Selection / Range DOMExceptions
+      }
+    }
+  } catch (err) {
+    console.warn('[FluxSnip] Safe guard in restoreRange:', err);
   }
 }
