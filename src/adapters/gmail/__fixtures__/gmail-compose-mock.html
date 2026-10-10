@@ -1,0 +1,42 @@
+<div id="gmail-viewport">
+  <!-- Search bar (should be ignored) -->
+  <header>
+    <input name="q" role="combobox" aria-label="メールを検索" value="" />
+  </header>
+
+  <!-- Popup Compose Dialog (Japanese UI) -->
+  <div role="dialog" aria-label="新規メッセージ" class="M9">
+    <div class="aoD hl">
+      <input name="subjectbox" placeholder="件名" value="" />
+    </div>
+    <div class="Ap">
+      <div
+        id="gmail-popup-body"
+        role="textbox"
+        contenteditable="true"
+        g_editable="true"
+        aria-label="メッセージの本文"
+        class="Am Al editable"
+      >
+        <p>Popup body content</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline Reply Window (English UI) -->
+  <div role="main">
+    <div class="M9 reply-container">
+      <input name="subject" type="hidden" value="Re: Project Update" />
+      <div
+        id="gmail-inline-reply-body"
+        role="textbox"
+        contenteditable="true"
+        g_editable="true"
+        aria-label="Message Body"
+      >
+        <p>Reply text</p>
+        <div class="gmail_quote">Quoted original text</div>
+      </div>
+    </div>
+  </div>
+</div>
