@@ -239,12 +239,10 @@ export const UI_STYLES = `
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: hsl(240, 20%, 10% / 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid hsl(240, 20%, 30% / 0.6);
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6);
-  color: hsl(240, 20%, 95%);
+  background: #181924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
+  color: #f3f4f6 !important;
   animation: toast-in 150ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transition: opacity 150ms ease, transform 150ms ease;
 }
@@ -273,24 +271,26 @@ export const UI_STYLES = `
 
 .toast-info .toast-icon { color: hsl(190, 90%, 55%); }
 .toast-success .toast-icon { color: hsl(150, 60%, 50%); }
-.toast-warn .toast-icon { color: hsl(38, 92%, 55%); }
-.toast-error .toast-icon { color: hsl(350, 80%, 62%); }
+.toast-warn .toast-icon { color: #f59e0b !important; }
+.toast-error .toast-icon { color: #ef4444 !important; }
 
-.toast-info { border-left: 3px solid hsl(190, 90%, 55%); }
-.toast-success { border-left: 3px solid hsl(150, 60%, 50%); }
-.toast-warn { border-left: 3px solid hsl(38, 92%, 55%); }
-.toast-error { border-left: 3px solid hsl(350, 80%, 62%); }
+.toast-info { border-left: 3px solid hsl(190, 90%, 55%) !important; }
+.toast-success { border-left: 3px solid hsl(150, 60%, 50%) !important; }
+.toast-warn { border-left: 3px solid #f59e0b !important; }
+.toast-error { border-left: 3px solid #ef4444 !important; }
 
 .toast-content {
   flex: 1;
   font-size: 12.5px;
   word-break: break-word;
+  color: #f3f4f6 !important;
+  line-height: 1.4;
 }
 
 .toast-close {
   background: transparent;
   border: none;
-  color: hsl(240, 10%, 60%);
+  color: rgba(255, 255, 255, 0.6) !important;
   cursor: pointer;
   font-size: 14px;
   padding: 0 2px;
@@ -300,6 +300,6 @@ export const UI_STYLES = `
 }
 
 .toast-close:hover {
-  color: hsl(240, 20%, 95%);
+  color: #ffffff !important;
 }
 `;

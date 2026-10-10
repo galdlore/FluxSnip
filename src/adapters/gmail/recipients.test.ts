@@ -123,4 +123,29 @@ describe('gmail recipients', () => {
 
     collapsedRoot.remove();
   });
+
+  it('forcefully expands collapsed To row via fallback if click handler is absent', async () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">宛先</div>
+      </div>
+    `;
+    document.body.appendChild(collapsedRoot);
+
+    const hiddenTable = collapsedRoot.querySelector('.fX.aiL') as HTMLElement;
+    const collapsedHeader = collapsedRoot.querySelector('.aoD.hl') as HTMLElement;
+
+    // No click listener attached, so fallback should trigger
+    const isVis = await ensureFieldVisible(collapsedRoot, 'to');
+    expect(isVis).toBe(true);
+    expect(hiddenTable.style.display).toBe('');
+    expect(collapsedHeader.style.display).toBe('none');
+
+    collapsedRoot.remove();
+  });
 });

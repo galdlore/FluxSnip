@@ -23,10 +23,23 @@ function getFieldSelectors(kind: RecipientKind) {
   };
 }
 
-function dispatchClick(el: HTMLElement): void {
-  el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-  el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-  el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+function dispatchInteraction(el: HTMLElement): void {
+  try {
+    el.focus();
+  } catch {}
+
+  const opts = { bubbles: true, cancelable: true, view: window };
+  if (typeof PointerEvent === 'function') {
+    el.dispatchEvent(new PointerEvent('pointerdown', opts));
+    el.dispatchEvent(new PointerEvent('pointerup', opts));
+  }
+  el.dispatchEvent(new MouseEvent('mousedown', opts));
+  el.dispatchEvent(new MouseEvent('mouseup', opts));
+  try {
+    el.click();
+  } catch {
+    el.dispatchEvent(new MouseEvent('click', opts));
+  }
 }
 
 function getRecipientContainer(root: HTMLElement, kind: RecipientKind): HTMLElement | null {
@@ -124,11 +137,34 @@ export async function ensureFieldVisible(root: HTMLElement, kind: RecipientKind)
   // 1. Expand collapsed To recipient row if table (div.fX) is hidden
   const collapsedHeader = q<HTMLElement>(root, SEL.recipients.collapsedHeader);
   if (collapsedHeader && isElementVisible(collapsedHeader)) {
-    dispatchClick(collapsedHeader);
+    // Interact with both label child and container
+    const labelChild = q<HTMLElement>(collapsedHeader, ['.oL.aDm', '.oL', 'div']);
+    if (labelChild) {
+      dispatchInteraction(labelChild);
+    }
+    dispatchInteraction(collapsedHeader);
+
+    // Wait briefly for Gmail to expand the table
     existingInput = await waitFor(() => {
       const inp = q<HTMLInputElement>(root, SEL.recipients.toInput);
       return inp && isElementVisible(inp) ? inp : null;
-    }, { timeout: 1500, interval: 40 }) ?? existingInput;
+    }, { timeout: 350, interval: 30 }) ?? existingInput;
+
+    // Fallback: If table is still display: none, forcefully reveal it and focus input
+    if (!existingInput || !isElementVisible(existingInput)) {
+      const fxTable = q<HTMLElement>(root, ['div.fX.aiL', 'div.fX']);
+      if (fxTable) {
+        fxTable.style.display = '';
+        collapsedHeader.style.display = 'none';
+        const inp = q<HTMLInputElement>(root, SEL.recipients.toInput);
+        if (inp) {
+          try {
+            inp.focus();
+          } catch {}
+          existingInput = inp;
+        }
+      }
+    }
   }
 
   if (kind === 'to') {
@@ -140,11 +176,11 @@ export async function ensureFieldVisible(root: HTMLElement, kind: RecipientKind)
   if (toggleSelectors.length > 0) {
     const toggleBtn = q<HTMLElement>(root, toggleSelectors);
     if (toggleBtn) {
-      dispatchClick(toggleBtn);
+      dispatchInteraction(toggleBtn);
       const visible = await waitFor(() => {
         const inp = q<HTMLInputElement>(root, inputSelectors);
         return inp && isElementVisible(inp) ? inp : null;
-      }, { timeout: 1500, interval: 40 });
+      }, { timeout: 400, interval: 30 });
       return !!visible;
     }
   }
@@ -175,10 +211,10 @@ export async function clearRecipients(root: HTMLElement, kind: RecipientKind): P
     // Try clicking chip's delete button
     const deleteBtn = q<HTMLElement>(firstChip, SEL.recipients.chipDeleteBtn);
     if (deleteBtn) {
-      dispatchClick(deleteBtn);
+      dispatchInteraction(deleteBtn);
     } else {
       // Fallback: click chip then dispatch Backspace on input
-      dispatchClick(firstChip);
+      dispatchInteraction(firstChip);
       const { input: inputSelectors } = getFieldSelectors(kind);
       const input = q<HTMLInputElement>(root, inputSelectors);
       if (input) {
@@ -193,7 +229,7 @@ export async function clearRecipients(root: HTMLElement, kind: RecipientKind): P
       firstChip.remove();
     }
 
-    await sleep(40);
+    await sleep(25);
   }
 
   return readRecipients(root, kind).length === 0;
@@ -214,7 +250,14 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
 
   for (const email of emails) {
     inputEl.focus();
-    await sleep(20);
+    await sleep(15);
+
+    // If inputEl did not gain active focus, try interacting with it directly
+    if (document.activeElement !== inputEl) {
+      dispatchInteraction(inputEl);
+      inputEl.focus();
+      await sleep(15);
+    }
 
     // Guard: Only use execCommand if inputEl actually gained focus!
     // Prevents leaking email into the email body editor.
@@ -236,15 +279,15 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
     }
 
     // Trigger Enter keydown for chip conversion
-    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
-    inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
+    inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+    inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
 
-    await sleep(60);
+    await sleep(30);
   }
 
   // Final blur / focus transition to trigger pending chips
   inputEl.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-  await sleep(60);
+  await sleep(30);
 
   return true;
 }
