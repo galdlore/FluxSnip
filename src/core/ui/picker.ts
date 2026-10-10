@@ -234,6 +234,11 @@ export function openPicker(opts: PickerOptions): { close(): void } {
         topRow.appendChild(tagsWrap);
       }
 
+      const selectHint = document.createElement('span');
+      selectHint.className = 'picker-item-select-hint';
+      selectHint.textContent = '↵ Enter';
+      topRow.appendChild(selectHint);
+
       const previewEl = document.createElement('div');
       previewEl.className = 'picker-item-preview';
       const plain = astToPlainText(item.bodyAst);

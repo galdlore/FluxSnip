@@ -107,18 +107,53 @@ export const UI_STYLES = `
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
   background: transparent;
   border: 1px solid transparent;
-  transition: background 100ms ease, border-color 100ms ease;
+  border-left: 4px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.picker-item:hover,
+.picker-item:hover {
+  background: hsl(262, 40%, 20% / 0.4);
+  border-color: hsl(262, 50%, 40% / 0.3);
+  border-left-color: hsl(262, 50%, 50% / 0.4);
+}
+
 .picker-item.selected {
-  background: hsl(262, 50%, 25% / 0.45);
-  border-color: hsl(262, 85%, 66% / 0.4);
+  background: linear-gradient(90deg, hsl(262, 85%, 65% / 0.28) 0%, hsl(262, 85%, 65% / 0.10) 100%);
+  border: 1px solid hsl(262, 85%, 68% / 0.65);
+  border-left: 4px solid hsl(262, 95%, 72%);
+  box-shadow: 0 4px 16px -2px hsl(262, 85%, 55% / 0.3), inset 0 0 12px hsl(262, 85%, 60% / 0.12);
+}
+
+.picker-item.selected .picker-item-name {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.picker-item.selected .picker-item-preview {
+  color: hsl(240, 20%, 88%);
+}
+
+.picker-item-select-hint {
+  display: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: hsl(190, 95%, 85%);
+  background: hsl(262, 70%, 45% / 0.6);
+  border: 1px solid hsl(262, 85%, 70% / 0.5);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.picker-item.selected .picker-item-select-hint {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 .picker-item-top {
