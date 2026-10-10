@@ -35,12 +35,7 @@ export const UI_STYLES = `
   max-height: 480px;
   display: flex;
   flex-direction: column;
-  background: hsl(240, 22%, 11% / 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1.5px solid hsl(262, 85%, 66% / 0.65);
   border-radius: 12px;
-  box-shadow: 0 20px 60px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
   overflow: hidden;
   animation: picker-in 120ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -56,54 +51,76 @@ export const UI_STYLES = `
   }
 }
 
-.picker-search-wrapper {
-  padding: 10px 12px;
-  border-bottom: 1px solid hsl(240, 20%, 30% / 0.35);
+/* =========================================
+   LIGHT THEME (Default & .light)
+   ========================================= */
+.picker-card,
+.picker-card.light {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 48px -6px rgba(0, 0, 0, 0.22), 0 2px 10px rgba(0, 0, 0, 0.08);
+  color: #1f2937;
+}
+
+.picker-card .picker-search-wrapper,
+.picker-card.light .picker-search-wrapper {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   gap: 8px;
-  background: hsl(240, 18%, 12% / 0.4);
+  background: rgba(248, 249, 250, 0.95);
 }
 
-.picker-search-icon {
-  color: hsl(240, 10%, 65%);
+.picker-card .picker-search-icon,
+.picker-card.light .picker-search-icon {
   font-size: 14px;
   line-height: 1;
 }
 
-.picker-search-input {
+.picker-card .picker-search-input,
+.picker-card.light .picker-search-input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  color: hsl(240, 20%, 96%);
-  font-size: 13.5px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
   font-family: inherit;
 }
 
-.picker-search-input::placeholder {
-  color: hsl(240, 10%, 55%);
+.picker-card .picker-search-input::placeholder,
+.picker-card.light .picker-search-input::placeholder {
+  color: #9ca3af;
 }
 
-.picker-list {
+.picker-card .picker-list,
+.picker-card.light .picker-list {
   flex: 1;
   overflow-y: auto;
   max-height: 320px;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  background: #ffffff;
 }
 
-.picker-list::-webkit-scrollbar {
+.picker-card .picker-list::-webkit-scrollbar,
+.picker-card.light .picker-list::-webkit-scrollbar {
   width: 6px;
 }
-.picker-list::-webkit-scrollbar-thumb {
-  background: hsl(240, 20%, 30% / 0.6);
+.picker-card .picker-list::-webkit-scrollbar-thumb,
+.picker-card.light .picker-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 3px;
 }
 
-.picker-item {
+.picker-card .picker-item,
+.picker-card.light .picker-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -113,110 +130,122 @@ export const UI_STYLES = `
   background: transparent;
   border: 1px solid transparent;
   border-left: 4px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  transition: background 100ms ease, border-color 100ms ease;
 }
 
-.picker-item:hover {
-  background: hsl(262, 40%, 20% / 0.4);
-  border-color: hsl(262, 50%, 40% / 0.3);
-  border-left-color: hsl(262, 50%, 50% / 0.4);
+.picker-card .picker-item:hover,
+.picker-card.light .picker-item:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.picker-item.selected {
-  background: linear-gradient(90deg, hsl(262, 85%, 65% / 0.28) 0%, hsl(262, 85%, 65% / 0.10) 100%);
-  border: 1px solid hsl(262, 85%, 68% / 0.65);
-  border-left: 4px solid hsl(262, 95%, 72%);
-  box-shadow: 0 4px 16px -2px hsl(262, 85%, 55% / 0.3), inset 0 0 12px hsl(262, 85%, 60% / 0.12);
+.picker-card .picker-item.selected,
+.picker-card.light .picker-item.selected {
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.12) 0%, rgba(79, 70, 229, 0.03) 100%);
+  border: 1px solid rgba(79, 70, 229, 0.35);
+  border-left: 4px solid #4f46e5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
 }
 
-.picker-item.selected .picker-item-name {
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.picker-item.selected .picker-item-preview {
-  color: hsl(240, 20%, 88%);
-}
-
-.picker-item-select-hint {
-  display: none;
-  font-size: 10px;
-  font-weight: 600;
-  color: hsl(190, 95%, 85%);
-  background: hsl(262, 70%, 45% / 0.6);
-  border: 1px solid hsl(262, 85%, 70% / 0.5);
-  padding: 1px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.picker-item.selected .picker-item-select-hint {
-  display: inline-flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.picker-item-top {
+.picker-card .picker-item-top,
+.picker-card.light .picker-item-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.picker-item-title-group {
+.picker-card .picker-item-title-group,
+.picker-card.light .picker-item-title-group {
   display: flex;
   align-items: center;
   gap: 6px;
   overflow: hidden;
 }
 
-.picker-item-name {
+.picker-card .picker-item-name,
+.picker-card.light .picker-item-name {
   font-weight: 600;
-  color: hsl(240, 20%, 96%);
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.picker-keyword-badge {
+.picker-card .picker-item.selected .picker-item-name,
+.picker-card.light .picker-item.selected .picker-item-name {
+  color: #312e81;
+}
+
+.picker-card .picker-keyword-badge,
+.picker-card.light .picker-keyword-badge {
   font-family: Consolas, "Cascadia Code", monospace;
   font-size: 11px;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
-  background: linear-gradient(135deg, hsl(262, 85%, 66% / 0.25), hsl(190, 90%, 55% / 0.25));
-  border: 1px solid hsl(262, 85%, 66% / 0.4);
-  color: hsl(190, 95%, 75%);
+  background: rgba(79, 70, 229, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  color: #4338ca;
 }
 
-.picker-tag-badge {
+.picker-card .picker-tag-badge,
+.picker-card.light .picker-tag-badge {
   font-size: 10.5px;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
-  background: hsl(240, 16%, 20%);
-  color: hsl(240, 10%, 75%);
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
 }
 
-.picker-item-preview {
+.picker-card .picker-item-preview,
+.picker-card.light .picker-item-preview {
   font-size: 11.5px;
-  color: hsl(240, 10%, 65%);
+  color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.picker-empty-state {
+.picker-card .picker-item.selected .picker-item-preview,
+.picker-card.light .picker-item.selected .picker-item-preview {
+  color: #374151;
+}
+
+.picker-card .picker-item-select-hint,
+.picker-card.light .picker-item-select-hint {
+  display: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4338ca;
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.picker-card .picker-item.selected .picker-item-select-hint,
+.picker-card.light .picker-item.selected .picker-item-select-hint {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.picker-card .picker-empty-state,
+.picker-card.light .picker-empty-state {
   padding: 24px 16px;
   text-align: center;
-  color: hsl(240, 10%, 60%);
+  color: #6b7280;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 }
 
-.picker-options-link {
-  color: hsl(190, 90%, 55%);
+.picker-card .picker-options-link,
+.picker-card.light .picker-options-link {
+  color: #4f46e5;
   text-decoration: underline;
   cursor: pointer;
   background: none;
@@ -226,31 +255,123 @@ export const UI_STYLES = `
   font-family: inherit;
 }
 
-.picker-footer {
-  padding: 6px 12px;
-  border-top: 1px solid hsl(240, 20%, 30% / 0.3);
-  background: hsl(240, 20%, 8% / 0.6);
+.picker-card .picker-footer,
+.picker-card.light .picker-footer {
+  padding: 7px 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
-  color: hsl(240, 10%, 55%);
+  color: #6b7280;
 }
 
-.picker-footer-hints {
+.picker-card .picker-footer-hints,
+.picker-card.light .picker-footer-hints {
   display: flex;
   gap: 12px;
 }
 
-.picker-kbd {
-  background: hsl(240, 16%, 20%);
-  border: 1px solid hsl(240, 20%, 35%);
-  padding: 1px 4px;
-  border-radius: 3px;
+.picker-card .picker-kbd,
+.picker-card.light .picker-kbd {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 1px 5px;
+  border-radius: 4px;
   font-family: inherit;
-  font-size: 10px;
-  color: hsl(240, 15%, 85%);
+  font-size: 10.5px;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   margin-right: 3px;
+}
+
+/* =========================================
+   DARK THEME (.dark)
+   ========================================= */
+.picker-card.dark {
+  background: rgba(18, 19, 31, 0.98);
+  border: 1.5px solid rgba(139, 92, 246, 0.6);
+  box-shadow: 0 20px 60px -8px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: hsl(240, 20%, 95%);
+}
+
+.picker-card.dark .picker-search-wrapper {
+  background: rgba(28, 29, 45, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.picker-card.dark .picker-search-input {
+  color: hsl(240, 20%, 96%);
+}
+
+.picker-card.dark .picker-search-input::placeholder {
+  color: hsl(240, 10%, 55%);
+}
+
+.picker-card.dark .picker-list {
+  background: transparent;
+}
+
+.picker-card.dark .picker-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.picker-card.dark .picker-item:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.picker-card.dark .picker-item.selected {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.28) 0%, rgba(139, 92, 246, 0.10) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.65);
+  border-left: 4px solid #a78bfa;
+  box-shadow: 0 4px 16px -2px rgba(139, 92, 246, 0.35);
+}
+
+.picker-card.dark .picker-item-name {
+  color: hsl(240, 20%, 96%);
+}
+
+.picker-card.dark .picker-item.selected .picker-item-name {
+  color: #ffffff;
+}
+
+.picker-card.dark .picker-keyword-badge {
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  color: #67e8f9;
+}
+
+.picker-card.dark .picker-tag-badge {
+  background: #2d2e42;
+  border: none;
+  color: #d1d5db;
+}
+
+.picker-card.dark .picker-item-preview {
+  color: hsl(240, 10%, 65%);
+}
+
+.picker-card.dark .picker-item.selected .picker-item-preview {
+  color: hsl(240, 20%, 88%);
+}
+
+.picker-card.dark .picker-item-select-hint {
+  background: rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+}
+
+.picker-card.dark .picker-footer {
+  background: rgba(13, 14, 24, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: hsl(240, 10%, 55%);
+}
+
+.picker-card.dark .picker-kbd {
+  background: #2d2e42;
+  border: 1px solid #4b5563;
+  color: #e5e7eb;
 }
 
 /* ----------------- Toast Styles ----------------- */

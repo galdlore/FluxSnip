@@ -59,6 +59,37 @@ export function filterAndSortTemplates(templates: Template[], query: string): Te
 }
 
 /**
+ * Detects whether the host document is in dark mode based on background color and media query.
+ */
+function isPageDarkMode(): boolean {
+  try {
+    const targets = [document.body, document.documentElement];
+    for (const target of targets) {
+      if (!target) continue;
+      const bg = window.getComputedStyle(target).backgroundColor;
+      const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (match) {
+        const r = Number(match[1]);
+        const g = Number(match[2]);
+        const b = Number(match[3]);
+        // Skip fully transparent
+        if (r === 0 && g === 0 && b === 0 && bg.includes('0)')) continue;
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+      }
+    }
+  } catch {
+    // Ignore style computation errors
+  }
+
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+}
+
+/**
  * Opens the Template Picker modal within a closed Shadow DOM.
  */
 export function openPicker(opts: PickerOptions): { close(): void } {
@@ -82,7 +113,8 @@ export function openPicker(opts: PickerOptions): { close(): void } {
   backdrop.className = 'picker-backdrop';
 
   const card = document.createElement('div');
-  card.className = 'picker-card';
+  const isDark = isPageDarkMode();
+  card.className = `picker-card ${isDark ? 'dark' : 'light'}`;
 
   // Search input wrapper
   const searchWrap = document.createElement('div');
