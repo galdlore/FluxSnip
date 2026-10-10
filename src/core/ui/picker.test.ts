@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { GmailTemplate } from '../types';
-import { filterAndSortTemplates } from './picker';
+import { filterAndSortTemplates, openPicker } from './picker';
 
 describe('picker filterAndSortTemplates', () => {
   const templates: GmailTemplate[] = [
@@ -77,5 +77,87 @@ describe('picker filterAndSortTemplates', () => {
   it('returns empty array when nothing matches', () => {
     const results = filterAndSortTemplates(templates, 'nonexistentxyz');
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('picker keyboard navigation', () => {
+  const sampleTemplates: GmailTemplate[] = [
+    {
+      id: 'item-1',
+      platform: 'gmail',
+      name: 'First Item',
+      keyword: ';first',
+      tags: [],
+      bodyHtml: '<p>First</p>',
+      bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'First' }] }],
+      createdAt: 100,
+      updatedAt: 100,
+    },
+    {
+      id: 'item-2',
+      platform: 'gmail',
+      name: 'Second Item',
+      keyword: ';second',
+      tags: [],
+      bodyHtml: '<p>Second</p>',
+      bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'Second' }] }],
+      createdAt: 200,
+      updatedAt: 200,
+    },
+  ];
+
+  const dummyRect = {
+    x: 100,
+    y: 100,
+    top: 100,
+    bottom: 120,
+    left: 100,
+    right: 300,
+    width: 200,
+    height: 20,
+    toJSON: () => ({}),
+  } as DOMRect;
+
+  it('navigates with ArrowDown and selects with Enter', async () => {
+    const onSelect = vi.fn();
+    const onClose = vi.fn();
+
+    const picker = openPicker({
+      templates: sampleTemplates,
+      anchorRect: dummyRect,
+      onSelect,
+      onClose,
+    });
+
+    const host = document.getElementById('fluxsnip-picker-host');
+    expect(host).not.toBeNull();
+
+    // Initial state: item-2 selected (updatedAt: 200 > 100)
+    // Dispatch ArrowDown moves selection to item-1 (updatedAt: 100)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+    // Dispatch Enter to confirm selection
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(onSelect).toHaveBeenCalledWith(sampleTemplates[0]);
+    expect(document.getElementById('fluxsnip-picker-host')).toBeNull();
+  });
+
+  it('closes picker on Escape key without selecting', async () => {
+    const onSelect = vi.fn();
+    const onClose = vi.fn();
+
+    openPicker({
+      templates: sampleTemplates,
+      anchorRect: dummyRect,
+      onSelect,
+      onClose,
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+    expect(document.getElementById('fluxsnip-picker-host')).toBeNull();
   });
 });

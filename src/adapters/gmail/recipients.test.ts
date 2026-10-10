@@ -148,4 +148,79 @@ describe('gmail recipients', () => {
 
     collapsedRoot.remove();
   });
+
+  it('reads real PeopleKit chip with data-name and cleans domain parentheses', () => {
+    const realRoot = document.createElement('div');
+    realRoot.className = 'M9';
+    realRoot.innerHTML = `
+      <div class="wO nr">
+        <div name="to" class="anm">
+          <div role="option" class="afV" data-hovercard-id="kj.tadokoro@sunace-corp.com" data-name="田所 功次">
+            <div class="afZ af1">
+              <div class="akl">田所 功次</div>
+              <div class="akk">（sunace-corp.com）</div>
+            </div>
+          </div>
+          <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    `;
+
+    const list = readRecipients(realRoot, 'to');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.email).toBe('kj.tadokoro@sunace-corp.com');
+    expect(list[0]?.name).toBe('田所 功次');
+  });
+
+  it('falls back to reading contact from collapsed header when chips are not in container', () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">
+          <span data-hovercard-id="kj.tadokoro@gmail.com">田所 功次 (gmail.com)</span>
+        </div>
+      </div>
+    `;
+
+    const list = readRecipients(collapsedRoot, 'to');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.email).toBe('kj.tadokoro@gmail.com');
+    expect(list[0]?.name).toBe('田所 功次');
+  });
+
+  it('clears multiple recipient chips cleanly', async () => {
+    const multiRoot = document.createElement('div');
+    multiRoot.className = 'M9';
+    multiRoot.innerHTML = `
+      <div class="wO nr">
+        <div name="to" class="anm">
+          <div class="afZ" data-hovercard-id="user1@example.com">
+            <div class="af0"><div class="akl">user1@example.com</div></div>
+            <div class="afX" aria-label="削除"><svg></svg></div>
+          </div>
+          <div class="afZ" data-hovercard-id="user2@example.com">
+            <div class="af0"><div class="akl">user2@example.com</div></div>
+            <div class="afX" aria-label="削除"><svg></svg></div>
+          </div>
+          <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    `;
+
+    // Attach click listeners to delete buttons
+    multiRoot.querySelectorAll('.afX').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.closest('.afZ')?.remove();
+      });
+    });
+
+    expect(readRecipients(multiRoot, 'to')).toHaveLength(2);
+    const ok = await clearRecipients(multiRoot, 'to');
+    expect(ok).toBe(true);
+    expect(readRecipients(multiRoot, 'to')).toHaveLength(0);
+  });
 });
