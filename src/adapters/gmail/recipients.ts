@@ -84,37 +84,81 @@ export function readRecipients(root: HTMLElement, kind: RecipientKind): { email:
   return results;
 }
 
+let _layoutSupported: boolean | null = null;
+function isLayoutEngineSupported(): boolean {
+  if (_layoutSupported !== null) return _layoutSupported;
+  if (typeof document === 'undefined' || !document.body) {
+    return false;
+  }
+  const testDiv = document.createElement('div');
+  testDiv.style.cssText = 'position:static;display:block;';
+  document.body.appendChild(testDiv);
+  _layoutSupported = testDiv.offsetParent !== null;
+  testDiv.remove();
+  return _layoutSupported;
+}
+
+export function isElementVisible(el: HTMLElement | null): boolean {
+  if (!el) return false;
+  if (!el.isConnected) return false;
+  if (el.style.display === 'none') return false;
+  if (el.closest('[style*="display: none"], [style*="display:none"]')) return false;
+
+  if (isLayoutEngineSupported()) {
+    return el.offsetParent !== null;
+  }
+  return true;
+}
+
 /**
  * Ensures the recipient row (especially Cc or Bcc) is expanded and visible.
  */
 export async function ensureFieldVisible(root: HTMLElement, kind: RecipientKind): Promise<boolean> {
   const { input: inputSelectors, toggle: toggleSelectors } = getFieldSelectors(kind);
-  const existingInput = q<HTMLInputElement>(root, inputSelectors);
+  let existingInput = q<HTMLInputElement>(root, inputSelectors);
 
-  if (existingInput && existingInput.offsetParent !== null) {
+  if (existingInput && isElementVisible(existingInput)) {
     return true;
   }
 
-  // If collapsed, click the toggle button
+  // 1. Expand collapsed To recipient row if table (div.fX) is hidden
+  const collapsedHeader = q<HTMLElement>(root, SEL.recipients.collapsedHeader);
+  if (collapsedHeader && isElementVisible(collapsedHeader)) {
+    dispatchClick(collapsedHeader);
+    existingInput = await waitFor(() => {
+      const inp = q<HTMLInputElement>(root, SEL.recipients.toInput);
+      return inp && isElementVisible(inp) ? inp : null;
+    }, { timeout: 1500, interval: 40 }) ?? existingInput;
+  }
+
+  if (kind === 'to') {
+    const toInput = q<HTMLInputElement>(root, SEL.recipients.toInput);
+    return !!toInput && isElementVisible(toInput);
+  }
+
+  // 2. If Cc or Bcc, click the toggle button after ensuring To row is expanded
   if (toggleSelectors.length > 0) {
     const toggleBtn = q<HTMLElement>(root, toggleSelectors);
     if (toggleBtn) {
       dispatchClick(toggleBtn);
       const visible = await waitFor(() => {
         const inp = q<HTMLInputElement>(root, inputSelectors);
-        return inp && inp.offsetParent !== null ? inp : null;
+        return inp && isElementVisible(inp) ? inp : null;
       }, { timeout: 1500, interval: 40 });
       return !!visible;
     }
   }
 
-  return !!existingInput;
+  const finalInput = q<HTMLInputElement>(root, inputSelectors);
+  return !!finalInput && isElementVisible(finalInput);
 }
 
 /**
  * Removes all recipient chips for the given kind.
  */
 export async function clearRecipients(root: HTMLElement, kind: RecipientKind): Promise<boolean> {
+  await ensureFieldVisible(root, kind);
+
   const container = getRecipientContainer(root, kind);
   if (!container) return true;
 
@@ -170,10 +214,14 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
 
   for (const email of emails) {
     inputEl.focus();
+    await sleep(20);
 
-    // 1. Try insertText if supported
+    // Guard: Only use execCommand if inputEl actually gained focus!
+    // Prevents leaking email into the email body editor.
+    const hasFocus = document.activeElement === inputEl;
     let inserted = false;
-    if (typeof document.execCommand === 'function') {
+
+    if (hasFocus && typeof document.execCommand === 'function') {
       try {
         inserted = document.execCommand('insertText', false, `${email}, `);
       } catch {
@@ -187,7 +235,7 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
       inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    // 2. Trigger Enter keydown for chip conversion
+    // Trigger Enter keydown for chip conversion
     inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
     inputEl.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, bubbles: true }));
 
@@ -196,7 +244,7 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
 
   // Final blur / focus transition to trigger pending chips
   inputEl.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-  await sleep(100);
+  await sleep(60);
 
   return true;
 }

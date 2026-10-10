@@ -94,4 +94,33 @@ describe('gmail recipients', () => {
     });
     expect(result).toBe(true);
   });
+
+  it('expands collapsed To row when div.aoD.hl is clicked', async () => {
+    // Simulate collapsed To row (like failsetsendto.html)
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">宛先</div>
+      </div>
+    `;
+    document.body.appendChild(collapsedRoot);
+
+    const collapsedHeader = collapsedRoot.querySelector('.aoD.hl') as HTMLElement;
+    const hiddenTable = collapsedRoot.querySelector('.fX.aiL') as HTMLElement;
+    const toInput = collapsedRoot.querySelector('input') as HTMLInputElement;
+
+    collapsedHeader.addEventListener('click', () => {
+      hiddenTable.style.display = 'block';
+    });
+
+    const isVis = await ensureFieldVisible(collapsedRoot, 'to');
+    expect(isVis).toBe(true);
+    expect(hiddenTable.style.display).toBe('block');
+
+    collapsedRoot.remove();
+  });
 });

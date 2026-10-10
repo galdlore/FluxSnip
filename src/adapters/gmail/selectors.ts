@@ -44,6 +44,12 @@ export const SEL = {
    * Recipient input fields (PeopleKit component).
    */
   recipients: {
+    // Collapsed header row when body is focused (div.aoD.hl / div.oL.aDm "宛先")
+    collapsedHeader: [
+      'div.aoD.hl',
+      'div.oL.aDm',
+      'div.oL',
+    ],
     toInput: [
       'input.agP.aFx[aria-label*="To"]',
       'input[peoplekit-id][aria-label*="To"]',
