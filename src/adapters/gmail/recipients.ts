@@ -54,6 +54,55 @@ function getRecipientContainer(root: HTMLElement, kind: RecipientKind): HTMLElem
 }
 
 /**
+ * Resolves contact display name from PeopleKit suggestion items / hovercards in the compose root or document.
+ */
+export function resolveContactName(root: HTMLElement, email: string): string | undefined {
+  if (!email) return undefined;
+  const escapedEmail = email.replace(/["\\]/g, '\\$&');
+  const doc = root.ownerDocument || (typeof document !== 'undefined' ? document : null);
+
+  const candidateSelectors = [
+    `[data-hovercard-id="${escapedEmail}"][data-name]`,
+    `[data-name][data-hovercard-id="${escapedEmail}"]`,
+    `[pkd-target*="${escapedEmail}"] [data-name]`,
+    `[pkd-target*="${escapedEmail}"] .aL8`,
+    `[data-hovercard-id="${escapedEmail}"] .aL8`,
+    `div.agH[data-hovercard-id="${escapedEmail}"]`,
+    `div.agJ[pkd-target*="${escapedEmail}"]`,
+  ];
+
+  const contexts = doc ? [root, doc] : [root];
+  for (const ctx of contexts) {
+    for (const sel of candidateSelectors) {
+      try {
+        const el = ctx.querySelector(sel);
+        if (el) {
+          const dataName = el.getAttribute('data-name')?.trim();
+          if (dataName && !dataName.includes('@')) {
+            return dataName;
+          }
+          const text = el.textContent?.trim();
+          if (text && !text.includes('@')) {
+            return text;
+          }
+          const nameChild = el.querySelector('.aL8, [data-name]');
+          if (nameChild) {
+            const childName = nameChild.getAttribute('data-name')?.trim() || nameChild.textContent?.trim();
+            if (childName && !childName.includes('@')) {
+              return childName;
+            }
+          }
+        }
+      } catch {
+        // Ignore query errors
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Reads all currently selected recipients for the specified kind.
  */
 export function readRecipients(root: HTMLElement, kind: RecipientKind): { email: string; name?: string }[] {
@@ -71,7 +120,10 @@ export function readRecipients(root: HTMLElement, kind: RecipientKind): { email:
         if (match) {
           const rawText = span.textContent?.trim() || '';
           // Clean "(...)" from display name, e.g. "田所 功次 (gmail.com)" -> "田所 功次"
-          const cleanName = rawText.replace(/\s*[\(（][^\)）]*[\)）]\s*/g, '').replace(match[0], '').trim();
+          let cleanName = rawText.replace(/\s*[\(（][^\)）]*[\)）]\s*/g, '').replace(match[0], '').trim();
+          if (!cleanName || cleanName.toLowerCase() === match[0].toLowerCase()) {
+            cleanName = resolveContactName(root, match[0]) || '';
+          }
           return [{ email: match[0], name: cleanName || undefined }];
         }
       }
@@ -122,10 +174,26 @@ export function readRecipients(root: HTMLElement, kind: RecipientKind): { email:
       if (name.toLowerCase() === email.toLowerCase()) {
         name = '';
       }
+      if (!name) {
+        name = resolveContactName(root, email) || '';
+      }
       if (!seenEmails.has(email.toLowerCase())) {
         seenEmails.add(email.toLowerCase());
         results.push({ email, name: name || undefined });
       }
+    }
+  }
+
+  // Extra fallback: If results is empty and there's text or mirror span in the input field
+  if (results.length === 0) {
+    const inputEl = q<HTMLInputElement>(root, getFieldSelectors(kind).input);
+    const mirrorSpan = container ? q<HTMLElement>(container, ['span.aIa.aFx', 'span[peoplekit-id]']) : null;
+    const pendingText = (mirrorSpan?.textContent || inputEl?.value || '').trim();
+    const emailMatch = pendingText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    if (emailMatch) {
+      const email = emailMatch[0];
+      const name = resolveContactName(root, email);
+      results.push({ email, name });
     }
   }
 

@@ -223,4 +223,30 @@ describe('gmail recipients', () => {
     expect(ok).toBe(true);
     expect(readRecipients(multiRoot, 'to')).toHaveLength(0);
   });
+
+  it('resolves contact name from PeopleKit cache when collapsed header only has raw email', () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;"></div>
+      <div class="aoD hl">
+        <div class="oL aDm">
+          <span email="kj.tadokoro@gmail.com" data-hovercard-id="kj.tadokoro@gmail.com">kj.tadokoro@gmail.com</span>
+        </div>
+      </div>
+      <div class="afA" style="display: none;">
+        <div role="option" pkd-target="1:kj.tadokoro@gmail.com;kj.tadokoro@gmail.com">
+          <div class="agH" data-hovercard-id="kj.tadokoro@gmail.com" data-name="田所 功次">
+            <div class="aL8" data-name="田所 功次">田所 功次</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const recipients = readRecipients(collapsedRoot, 'to');
+    expect(recipients).toHaveLength(1);
+    expect(recipients[0]?.email).toBe('kj.tadokoro@gmail.com');
+    expect(recipients[0]?.name).toBe('田所 功次');
+  });
 });
+

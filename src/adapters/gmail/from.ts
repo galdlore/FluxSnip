@@ -42,6 +42,33 @@ export function readFrom(root: HTMLElement): { email: string; name?: string } | 
     if (parsed) return parsed;
   }
 
+  // 3. Fallback for single-account Gmail (no From dropdown):
+  // Check Google account button in header: aria-label="Google アカウント: 田所 浩二 \n(xxx@gmail.com)"
+  const doc = root.ownerDocument || (typeof document !== 'undefined' ? document : null);
+  if (doc) {
+    const acctEl = doc.querySelector('a[aria-label*="Google アカウント"], a[aria-label*="Google Account"], a[aria-label*="@gmail.com"], a[aria-label*="@"]');
+    if (acctEl) {
+      const aria = acctEl.getAttribute('aria-label') || '';
+      const emailMatch = aria.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+      if (emailMatch) {
+        const email = emailMatch[0];
+        // e.g. "Google アカウント: K TD \n(galdlore@gmail.com)" -> extract "K TD"
+        const nameMatch = aria.match(/(?:Google\s*アカウント|Google\s*Account)[:：]?\s*([^\n\(（]+)/i);
+        const name = nameMatch && nameMatch[1] ? nameMatch[1].trim() : undefined;
+        return { email, name: name || undefined };
+      }
+    }
+
+    // 4. Meta tag fallback
+    const metaAcct = doc.querySelector('meta[name="og-profile-acct"]');
+    if (metaAcct) {
+      const email = metaAcct.getAttribute('content')?.trim();
+      if (email) {
+        return { email };
+      }
+    }
+  }
+
   return null;
 }
 
