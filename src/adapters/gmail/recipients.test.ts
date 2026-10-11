@@ -6,6 +6,7 @@ import {
   ensureFieldVisible,
   readRecipients,
 } from './recipients';
+import { simulatePeopleKit } from './__fixtures__/peoplekit-sim';
 
 const fixtureHtml = `
 <div id="gmail-compose-root" role="dialog" class="M9">
@@ -57,6 +58,7 @@ describe('gmail recipients', () => {
   });
 
   it('clears recipient chips by clicking delete button', async () => {
+    simulatePeopleKit(root);
     expect(readRecipients(root, 'to')).toHaveLength(1);
     const cleared = await clearRecipients(root, 'to');
     expect(cleared).toBe(true);
@@ -77,14 +79,48 @@ describe('gmail recipients', () => {
   });
 
   it('applies replace mode on recipient field', async () => {
+    simulatePeopleKit(root);
     const result = await applyRecipientField(root, 'to', {
       mode: 'replace',
       emails: ['sato@example.com'],
     });
     expect(result).toBe(true);
-    // After clear, existing chip is removed
     const list = readRecipients(root, 'to');
-    expect(list.some((r) => r.email === 'tanaka@example.com')).toBe(false);
+    expect(list.map((r) => r.email)).toEqual(['sato@example.com']);
+  });
+
+  it('reports failure and keeps the chip when Gmail does not remove it', async () => {
+    const chip = root.querySelector('.afZ');
+    const cleared = await clearRecipients(root, 'to');
+    expect(cleared).toBe(false);
+    expect(chip?.isConnected).toBe(true);
+  });
+
+  it('does not add new recipients in replace mode when old ones could not be cleared', async () => {
+    const input = root.querySelector('input[aria-label="To の宛先"]') as HTMLInputElement;
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['sato@example.com'],
+    });
+    expect(result).toBe(false);
+    expect(input.value).toBe('');
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual(['tanaka@example.com']);
+  });
+
+  it('adds recipients and confirms each one became a chip', async () => {
+    simulatePeopleKit(root);
+    const ok = await addRecipients(root, 'to', ['sato@example.com', 'suzuki@example.com']);
+    expect(ok).toBe(true);
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual([
+      'tanaka@example.com',
+      'sato@example.com',
+      'suzuki@example.com',
+    ]);
+  });
+
+  it('reports failure when a typed address never becomes a chip', async () => {
+    const ok = await addRecipients(root, 'to', ['sato@example.com']);
+    expect(ok).toBe(false);
   });
 
   it('applies append mode on recipient field without duplicating', async () => {
