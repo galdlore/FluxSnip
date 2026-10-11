@@ -75,6 +75,61 @@ export function mapAstText(nodes: AstNode[], fn: (s: string) => string): AstNode
   });
 }
 
+const PLACEHOLDER_BOUNDARY_TAGS = new Set([...BLOCK_TAGS, 'td', 'th', 'br']);
+const PLACEHOLDER_REGEX = /\{\{[^{}\n]{1,80}\}\}/g;
+
+/**
+ * Returns a copy of the AST where every {{...}} placeholder split across several text nodes
+ * (e.g. `{{to.` bold and `name}}` plain) is moved whole into its first text node, so that
+ * per-text-node variable expansion can see it. Placeholders never span block boundaries.
+ */
+export function joinSplitPlaceholders(nodes: AstNode[]): AstNode[] {
+  const copy = mapAstText(nodes, (s) => s);
+  const texts: Array<{ node: AstText; start: number }> = [];
+  let joined = '';
+
+  const walk = (list: AstNode[]) => {
+    for (const n of list) {
+      if (isAstText(n)) {
+        texts.push({ node: n, start: joined.length });
+        joined += n.v;
+        continue;
+      }
+      const boundary = PLACEHOLDER_BOUNDARY_TAGS.has(n.t.toLowerCase());
+      if (boundary) joined += '\n';
+      if (n.c) walk(n.c);
+      if (boundary) joined += '\n';
+    }
+  };
+  walk(copy);
+
+  const matches = Array.from(joined.matchAll(PLACEHOLDER_REGEX), (m) => ({
+    start: m.index ?? 0,
+    end: (m.index ?? 0) + m[0].length,
+    text: m[0],
+  }));
+  if (matches.length === 0) return copy;
+
+  for (const { node, start } of texts) {
+    const end = start + node.v.length;
+    let out = '';
+    let g = start;
+    while (g < end) {
+      const m = matches.find((mm) => mm.start <= g && g < mm.end);
+      if (!m) {
+        out += joined[g];
+        g++;
+        continue;
+      }
+      if (g === m.start) out += m.text;
+      g = Math.min(m.end, end);
+    }
+    node.v = out;
+  }
+
+  return copy;
+}
+
 interface PlainTextContext {
   listStack: Array<{ type: 'ul' | 'ol'; index: number }>;
 }

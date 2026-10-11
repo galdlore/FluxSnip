@@ -5,7 +5,7 @@ import {
   type Template,
   type TemplateVars,
 } from './types';
-import { astToChatText, astToHtml, astToPlainText, mapAstText } from './html/ast';
+import { astToChatText, astToHtml, astToPlainText, joinSplitPlaceholders, mapAstText } from './html/ast';
 
 const CJK_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 const CURSOR_REGEX = /\{\{\s*cursor\s*\}\}/g;
@@ -184,7 +184,7 @@ export function expandText(s: string, vars: TemplateVars): string {
  * Renders a full template with variable substitutions.
  */
 export function renderTemplate(t: Template, vars: TemplateVars): RenderedContent {
-  const substitutedAst = mapAstText(t.bodyAst, (text) =>
+  const substitutedAst = mapAstText(joinSplitPlaceholders(t.bodyAst), (text) =>
     expandText(text.replace(CURSOR_REGEX, CURSOR_MARK), vars)
   );
   const cleanAst = mapAstText(substitutedAst, (text) => text.split(CURSOR_MARK).join(''));

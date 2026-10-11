@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { astToChatText, astToDom, astToHtml, astToPlainText } from './ast';
+import { astToChatText, astToDom, astToHtml, astToPlainText, joinSplitPlaceholders } from './ast';
 import type { AstNode } from '../types';
 
 describe('ast serializers', () => {
@@ -128,6 +128,32 @@ describe('ast serializers', () => {
     ];
 
     expect(astToChatText(ast)).toBe('see file_name_here and https://ex.com/a_b_c and _real_ !');
+  });
+
+  it('joins placeholders split across formatting into the first text node', () => {
+    const ast: AstNode[] = [
+      {
+        t: 'p',
+        c: [
+          { t: '#text', v: 'Dear {{to.' },
+          { t: 'b', c: [{ t: '#text', v: 'last' }] },
+          { t: '#text', v: 'Name}} and {{date}}' },
+        ],
+      },
+    ];
+
+    expect(astToHtml(joinSplitPlaceholders(ast))).toBe('<p>Dear {{to.lastName}}<b></b> and {{date}}</p>');
+    // Input is not mutated
+    expect(astToHtml(ast)).toBe('<p>Dear {{to.<b>last</b>Name}} and {{date}}</p>');
+  });
+
+  it('does not join braces across block boundaries', () => {
+    const ast: AstNode[] = [
+      { t: 'p', c: [{ t: '#text', v: 'open {{' }] },
+      { t: 'p', c: [{ t: '#text', v: 'date}} close' }] },
+    ];
+
+    expect(astToHtml(joinSplitPlaceholders(ast))).toBe(astToHtml(ast));
   });
 
   it('astToDom safely creates DOM nodes without innerHTML and drops unsafe href', () => {

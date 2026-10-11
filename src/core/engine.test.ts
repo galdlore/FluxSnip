@@ -97,6 +97,32 @@ describe('renderTemplate', () => {
     expect(rendered.text).toBe('Hello 一郎!');
   });
 
+  it('expands a variable whose name was partly formatted in the editor', () => {
+    const t: Template = {
+      id: '3',
+      platform: 'gmail',
+      name: 'Split',
+      keyword: ';split',
+      tags: [],
+      bodyHtml: '<p>{{to.<b>last</b>Name}}様</p>',
+      bodyAst: [
+        {
+          t: 'p',
+          c: [
+            { t: '#text', v: '{{to.' },
+            { t: 'b', c: [{ t: '#text', v: 'last' }] },
+            { t: '#text', v: 'Name}}様' },
+          ],
+        },
+      ],
+      createdAt: 1,
+      updatedAt: 1,
+    };
+
+    const rendered = renderTemplate(t, { now: new Date(), locale: 'ja', to: { name: '鈴木 一郎' } });
+    expect(rendered.text).toBe('鈴木様');
+  });
+
   it('keeps a cursor mark in the AST only, stripped from html/text/chatText', () => {
     const t: Template = {
       id: '2',
