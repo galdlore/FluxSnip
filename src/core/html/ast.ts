@@ -177,15 +177,20 @@ export function astToPlainText(nodes: AstNode[]): string {
 /**
  * Wraps text in markdown marker, placing outer whitespaces outside the marker.
  */
-function wrapMarker(text: string, marker: string): string {
+function wrapMarker(text: string, marker: string, closeMarker: string = marker): string {
   if (!text || text.trim().length === 0) {
     return text;
   }
   const match = text.match(/^(\s*)([\s\S]*?)(\s*)$/);
-  if (!match) return `${marker}${text}${marker}`;
+  if (!match) return `${marker}${text}${closeMarker}`;
   const [, leading, content, trailing] = match;
-  return `${leading}${marker}${content}${marker}${trailing}`;
+  return `${leading}${marker}${content}${closeMarker}${trailing}`;
 }
+
+// Private-use placeholders for italic markers, so boundary spacing only touches real <i>/<em>
+// and never literal underscores in text (snake_case, URLs).
+const ITALIC_OPEN = '\uE000';
+const ITALIC_CLOSE = '\uE001';
 
 function renderNodeToChatText(node: AstNode, ctx: PlainTextContext): string {
   if (isAstText(node)) {
@@ -201,7 +206,7 @@ function renderNodeToChatText(node: AstNode, ctx: PlainTextContext): string {
   }
   if (tag === 'i' || tag === 'em') {
     const inner = (node.c || []).map((child: AstNode) => renderNodeToChatText(child, ctx)).join('');
-    return wrapMarker(inner, '_');
+    return wrapMarker(inner, ITALIC_OPEN, ITALIC_CLOSE);
   }
   if (tag === 's' || tag === 'strike' || tag === 'del') {
     const inner = (node.c || []).map((child: AstNode) => renderNodeToChatText(child, ctx)).join('');
@@ -298,9 +303,10 @@ export function astToChatText(nodes: AstNode[]): string {
   return raw
     .replace(/\r\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
-    // Ensure word-boundary spaces around '_' italics when directly adjacent to alphanumeric or CJK characters
-    .replace(/([^\s*_~`])_([^\s_].*?[^\s_]|[^_\s])_/g, '$1 _$2_')
-    .replace(/_([^\s_].*?[^\s_]|[^_\s])_([^\s*_~`])/g, '_$1_ $2')
+    // Google Chat only renders '_' italics on word boundaries
+    .replace(/([^\s*_~`\uE000\uE001])\uE000/g, `$1 ${ITALIC_OPEN}`)
+    .replace(/\uE001([^\s*_~`\uE000\uE001])/g, `${ITALIC_CLOSE} $1`)
+    .replace(/[\uE000\uE001]/g, '_')
     .trim();
 }
 

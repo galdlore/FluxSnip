@@ -115,6 +115,21 @@ describe('ast serializers', () => {
     expect(chatText).toBe('書体テスト _を実施_ いたします');
   });
 
+  it('keeps literal underscores in snake_case and URLs intact', () => {
+    const ast: AstNode[] = [
+      {
+        t: 'p',
+        c: [
+          { t: '#text', v: 'see file_name_here and https://ex.com/a_b_c and ' },
+          { t: 'em', c: [{ t: '#text', v: 'real' }] },
+          { t: '#text', v: '!' },
+        ],
+      },
+    ];
+
+    expect(astToChatText(ast)).toBe('see file_name_here and https://ex.com/a_b_c and _real_ !');
+  });
+
   it('astToDom safely creates DOM nodes without innerHTML and drops unsafe href', () => {
     const ast: AstNode[] = [
       {
