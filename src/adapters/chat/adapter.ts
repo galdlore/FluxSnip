@@ -37,11 +37,14 @@ export const chatAdapter: PlatformAdapter = {
         }
       }
 
-      // Look inside current container if active element is a child or selection container
-      const innerEditor = q<HTMLElement>(el, SEL.body);
-      if (innerEditor && (innerEditor.isContentEditable || innerEditor.getAttribute('contenteditable') === 'true')) {
-        if (!(innerEditor.classList.contains('Am') && innerEditor.closest('.M9, table.aoI'))) {
-          return innerEditor;
+      // Focus is elsewhere in a message box (e.g. send button): only search inside that box,
+      // never in arbitrary ancestors, or any textbox on the page would be claimed.
+      if (matchesAny(el, SEL.container)) {
+        const innerEditor = q<HTMLElement>(el, SEL.body);
+        if (innerEditor && (innerEditor.isContentEditable || innerEditor.getAttribute('contenteditable') === 'true')) {
+          if (!(innerEditor.classList.contains('Am') && innerEditor.closest('.M9, table.aoI'))) {
+            return innerEditor;
+          }
         }
       }
 
