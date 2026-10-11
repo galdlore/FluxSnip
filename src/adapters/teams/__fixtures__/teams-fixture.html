@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Teams Anonymized DOM Fixture</title>
+</head>
+<body>
+  <!-- Global Search Bar -->
+  <header>
+    <div role="search">
+      <input id="ms-searchux-input" data-tid="AUTOSUGGEST_INPUT" aria-autocomplete="list" autocomplete="off" />
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main>
+    <!-- Section 1: 1-on-1 / Group Chat Compose Footer -->
+    <div id="chat-section">
+      <div data-tid="chat-pane-compose-message-footer" class="message-pane-footer">
+        <div class="ck-editor-container">
+          <div
+            id="chat-ckeditor"
+            placeholder="メッセージを入力"
+            aria-label="メッセージを入力"
+            tabindex="0"
+            data-tid="ckeditor"
+            data-is-focusable="true"
+            data-shortcut-context="compose-field"
+            class="ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline"
+            role="textbox"
+            contenteditable="true"
+            data-tabster='{"focusable":{"isDefault":true}, "observed":{"names":["chat-input"]}}'
+          >
+            <p id="chat-p" class="ck-placeholder" data-placeholder="メッセージを入力">
+              <span id="chat-text">Hello Teams</span>
+            </p>
+          </div>
+        </div>
+        <div class="footer-buttons">
+          <button data-tid="sendMessageCommands-send" aria-label="送信 (Ctrl+Enter)" name="send">
+            送信
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Channel New Post Compose Layout -->
+    <div id="channel-section">
+      <div data-tid="post-compose-layout" class="post-compose-layout">
+        <!-- Subject Input -->
+        <div class="subject-row">
+          <input
+            id="channel-subject-input"
+            type="text"
+            data-tid="post-compose-subject-editor"
+            maxlength="250"
+            placeholder="件名を追加"
+            aria-label="件名を追加"
+            value=""
+          />
+        </div>
+
+        <!-- Body Editor -->
+        <div class="ck-editor-container">
+          <div
+            id="channel-ckeditor"
+            placeholder="メッセージを入力"
+            aria-label="メッセージを入力"
+            tabindex="0"
+            data-tid="ckeditor"
+            data-is-focusable="true"
+            data-shortcut-context="compose-field"
+            class="ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline"
+            role="textbox"
+            contenteditable="true"
+            data-tabster='{"focusable":{"isDefault":true}, "observed":{"names":["chat-input"]}}'
+          >
+            <p id="channel-p" class="ck-placeholder" data-placeholder="メッセージを入力">
+              <br data-cke-filler="true" />
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer / Post Button -->
+        <div class="channel-footer">
+          <button id="channel-post-btn" type="button" tabindex="0">投稿</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

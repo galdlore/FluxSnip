@@ -27,3 +27,4 @@ web-ext.config.ts
 
 # Project private files
 Secret/
+product/
