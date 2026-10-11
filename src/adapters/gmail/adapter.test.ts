@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { gmailAdapter } from './adapter';
 import { findComposeRoot, findGmailBody } from './compose';
+import { simulatePeopleKit } from './__fixtures__/peoplekit-sim';
 
 const fixtureHtml = `
 <div id="gmail-viewport">
@@ -152,6 +153,7 @@ describe('gmail adapter and compose detection', () => {
     dialog.insertAdjacentHTML('beforeend', `
       <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
     `);
+    simulatePeopleKit(dialog);
 
     const bodyEl = document.getElementById('gmail-popup-body') as HTMLElement;
     const template: any = {

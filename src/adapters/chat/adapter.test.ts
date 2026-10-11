@@ -77,6 +77,21 @@ describe('Google Chat Adapter', () => {
     expect(found).toBeNull();
   });
 
+  it('resolves the editor when focus is on another control inside the message box', () => {
+    const sendBtn = document.querySelector('button[jsname="GBTyxb"]') as HTMLElement;
+    const expected = document.getElementById('chat-editor') as HTMLElement;
+    expect(chatAdapter.findEditor(sendBtn)).toBe(expected);
+  });
+
+  it('does not claim an unrelated editor when focus is outside any message box', () => {
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+
+    expect(chatAdapter.findEditor(outside)).toBeNull();
+    expect(chatAdapter.findEditor(document.body)).toBeNull();
+    expect(chatAdapter.findEditor(document.querySelector('.test-chat-container'))).toBeNull();
+  });
+
   it('returns empty vars from collectVars', async () => {
     const editor = document.getElementById('chat-editor') as HTMLElement;
     const vars = await chatAdapter.collectVars(editor);

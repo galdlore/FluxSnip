@@ -327,12 +327,12 @@ export async function clearRecipients(root: HTMLElement, kind: RecipientKind): P
       }
     }
 
-    // If still attached after a tick (e.g. test environment or stubborn DOM), remove directly
-    if (firstChip.isConnected) {
-      firstChip.remove();
+    // Never remove the chip node ourselves: Gmail would keep the recipient in its own state
+    // while the UI shows it as gone, and the mail would still be sent to them.
+    const removed = await waitFor(() => !firstChip.isConnected, { timeout: 400, interval: 25 });
+    if (!removed) {
+      return false;
     }
-
-    await sleep(25);
   }
 
   return readRecipients(root, kind).length === 0;
@@ -411,7 +411,15 @@ export async function addRecipients(root: HTMLElement, kind: RecipientKind, emai
     } catch {}
     inputEl.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
 
-    await sleep(30);
+    const committed = await waitFor(
+      () =>
+        !inputEl.value.toLowerCase().includes(email.toLowerCase()) &&
+        readRecipients(root, kind).some((r) => r.email.toLowerCase() === email.toLowerCase()),
+      { timeout: 600, interval: 30 }
+    );
+    if (!committed) {
+      return false;
+    }
   }
 
   return true;
@@ -426,7 +434,11 @@ export async function applyRecipientField(
   f: RecipientField
 ): Promise<boolean> {
   if (f.mode === 'replace') {
-    await clearRecipients(root, kind);
+    // Adding on top of recipients that could not be removed would silently mix old and new
+    const cleared = await clearRecipients(root, kind);
+    if (!cleared) {
+      return false;
+    }
     if (f.emails.length > 0) {
       return await addRecipients(root, kind, f.emails);
     }
