@@ -104,6 +104,60 @@ describe('backup module', () => {
     expect(JSON.stringify(item?.bodyAst)).not.toContain('evil()');
   });
 
+  it('keeps only well-typed settings values and defaults the rest', () => {
+    const preview = parseImport(
+      JSON.stringify({
+        app: 'FluxSnip',
+        templates: {},
+        settings: {
+          pickerShortcut: { code: 'KeyK', ctrl: 'yes', alt: true },
+          enabled: { gmail: false, teams: 'off', evil: true },
+        },
+      })
+    );
+
+    expect(preview.settings).toEqual({
+      pickerShortcut: { code: 'KeyK', ctrl: false, alt: true, shift: false, meta: false },
+      enabled: { gmail: false, teams: true, chat: true },
+    });
+  });
+
+  it('ignores a non-object settings section and reports it', () => {
+    const preview = parseImport(JSON.stringify({ app: 'FluxSnip', templates: {}, settings: 'oops' }));
+    expect(preview.settings).toBeUndefined();
+    expect(preview.errors).toHaveLength(1);
+  });
+
+  it('skips merged templates whose keyword is already used by another template', async () => {
+    await replaceTemplates('teams', [
+      {
+        id: 'existing',
+        platform: 'teams',
+        name: 'Existing',
+        keyword: ';dup',
+        tags: [],
+        bodyHtml: '<p>A</p>',
+        bodyAst: [],
+        createdAt: 100,
+        updatedAt: 100,
+      },
+    ]);
+
+    const preview = parseImport(
+      JSON.stringify({
+        app: 'FluxSnip',
+        templates: {
+          teams: [{ id: 'incoming', name: 'Incoming', keyword: ';dup', bodyHtml: '<p>B</p>', updatedAt: 200 }],
+        },
+      })
+    );
+
+    const res = await applyImport(preview, 'merge', false);
+    expect(res).toEqual({ added: 0, updated: 0, skipped: 1 });
+    const current = await getTemplates('teams');
+    expect(current.map((i) => i.id)).toEqual(['existing']);
+  });
+
   it('handles merge mode comparing updatedAt timestamps', async () => {
     const initialTpl: Template = {
       id: 'item-1',

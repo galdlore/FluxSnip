@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expandText, renderTemplate, splitName } from './engine';
-import type { Template, TemplateVars } from './types';
+import { CURSOR_MARK, type Template, type TemplateVars } from './types';
 
 describe('splitName', () => {
   it('correctly parses CJK names with half-width and full-width spaces', () => {
@@ -95,5 +95,25 @@ describe('renderTemplate', () => {
     const rendered = renderTemplate(t, vars);
     expect(rendered.html).toBe('<p title="{{date}}">Hello 一郎!</p>');
     expect(rendered.text).toBe('Hello 一郎!');
+  });
+
+  it('keeps a cursor mark in the AST only, stripped from html/text/chatText', () => {
+    const t: Template = {
+      id: '2',
+      platform: 'gmail',
+      name: 'Cursor',
+      keyword: ';cur',
+      tags: [],
+      bodyHtml: '<p>Hi {{ cursor }}!</p>',
+      bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'Hi {{ cursor }}!' }] }],
+      createdAt: 1,
+      updatedAt: 1,
+    };
+
+    const rendered = renderTemplate(t, { now: new Date(), locale: 'ja' });
+    expect(JSON.stringify(rendered.ast)).toContain(`Hi ${CURSOR_MARK}!`);
+    expect(rendered.html).toBe('<p>Hi !</p>');
+    expect(rendered.text).toBe('Hi !');
+    expect(rendered.chatText).toBe('Hi !');
   });
 });

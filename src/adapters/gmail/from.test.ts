@@ -66,6 +66,22 @@ describe('gmail from alias', () => {
     expect(success).toBe(false);
   });
 
+  it('ignores hidden unrelated menus that appear earlier in the DOM', async () => {
+    const decoy = document.createElement('div');
+    decoy.className = 'J-M';
+    decoy.setAttribute('role', 'menu');
+    decoy.setAttribute('aria-haspopup', 'true');
+    decoy.style.display = 'none';
+    const decoyItem = document.createElement('div');
+    decoyItem.setAttribute('role', 'menuitem');
+    decoyItem.textContent = 'ラベルを管理';
+    decoy.appendChild(decoyItem);
+    document.body.insertBefore(decoy, document.body.firstChild);
+
+    const success = await selectFrom(root, 'tadokoro.k@sunace-corp.com');
+    expect(success).toBe(true);
+  });
+
   it('lists available aliases via listFromOptions', async () => {
     const options = await listFromOptions(root);
     expect(options).toContain('tadokoro.k@sunace-corp.com');
