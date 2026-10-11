@@ -316,6 +316,8 @@ export function openPicker(opts: PickerOptions): { close(): void } {
 
   function handleGlobalKey(e: KeyboardEvent) {
     if (isClosed) return;
+    // Let the IME handle keys while converting (e.g. Enter confirms Japanese conversion)
+    if (e.isComposing || e.keyCode === 229) return;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();

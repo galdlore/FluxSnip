@@ -160,4 +160,26 @@ describe('picker keyboard navigation', () => {
     expect(onClose).toHaveBeenCalled();
     expect(document.getElementById('fluxsnip-picker-host')).toBeNull();
   });
+
+  it('ignores Enter and Escape while IME composition is active', () => {
+    const onSelect = vi.fn();
+    const onClose = vi.fn();
+
+    const picker = openPicker({
+      templates: sampleTemplates,
+      anchorRect: dummyRect,
+      onSelect,
+      onClose,
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, bubbles: true }));
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.getElementById('fluxsnip-picker-host')).not.toBeNull();
+
+    picker.close();
+  });
 });
