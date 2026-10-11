@@ -1,6 +1,7 @@
 import { sleep, waitFor } from '@/core/dom';
 import { addKnownFromAddresses } from '@/core/storage';
-import { matchesAny, q, qAll, SEL } from './selectors';
+import { isElementVisible } from './recipients';
+import { q, qAll, SEL } from './selectors';
 
 function dispatchClick(el: HTMLElement): void {
   el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
@@ -21,6 +22,25 @@ function parseEmailAndName(text: string): { email: string; name?: string } | nul
   }
 
   return { email, name };
+}
+
+/**
+ * Finds the open From menu. Gmail keeps many hidden role="menu" elements in the DOM,
+ * so only a visible menu that lists email addresses qualifies.
+ */
+function findOpenFromMenu(): HTMLElement | null {
+  const candidates = [
+    ...qAll<HTMLElement>(document.body, SEL.from.menuContainer),
+    ...Array.from(document.querySelectorAll<HTMLElement>('div[role="menu"]')),
+  ];
+  for (const menu of candidates) {
+    if (!isElementVisible(menu)) continue;
+    const items = qAll<HTMLElement>(menu, SEL.from.menuItem);
+    if (items.some((item) => parseEmailAndName(item.getAttribute('value') || item.textContent || ''))) {
+      return menu;
+    }
+  }
+  return null;
 }
 
 /**
@@ -86,12 +106,7 @@ export async function listFromOptions(root: HTMLElement): Promise<string[]> {
   // Open menu
   dispatchClick(triggerBtn);
 
-  const menuContainer = await waitFor(() => {
-    return (
-      q<HTMLElement>(document.body, SEL.from.menuContainer) ||
-      document.querySelector('div[role="menu"]') as HTMLElement | null
-    );
-  }, { timeout: 1500, interval: 40 });
+  const menuContainer = await waitFor(findOpenFromMenu, { timeout: 1500, interval: 40 });
 
   if (!menuContainer) {
     return [];
@@ -137,12 +152,7 @@ export async function selectFrom(root: HTMLElement, targetEmail: string): Promis
   // Open menu
   dispatchClick(triggerBtn);
 
-  const menuContainer = await waitFor(() => {
-    return (
-      q<HTMLElement>(document.body, SEL.from.menuContainer) ||
-      document.querySelector('div[role="menu"]') as HTMLElement | null
-    );
-  }, { timeout: 1500, interval: 40 });
+  const menuContainer = await waitFor(findOpenFromMenu, { timeout: 1500, interval: 40 });
 
   if (!menuContainer) {
     return false;

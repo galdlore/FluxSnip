@@ -102,9 +102,27 @@ export function isAiPromptBox(element: Element | null): boolean {
   return matchesAny(element, SEL.aiPromptBox);
 }
 
+const AI_PANEL_BOUNDARY = '.YfAtle, .idpN8c, [role="dialog"]';
+const AI_SUBMIT_SEARCH_DEPTH = 5;
+
+/**
+ * Finds the Gemini submit button nearest to the prompt box. The search stops at the first
+ * panel/dialog boundary so it cannot reach unrelated buttons elsewhere in the compose window.
+ */
+function findAiSubmitButton(promptBox: HTMLElement): HTMLElement | null {
+  let el = promptBox.parentElement;
+  for (let depth = 0; el && depth < AI_SUBMIT_SEARCH_DEPTH; depth++) {
+    const btn = q<HTMLElement>(el, SEL.aiSubmitBtn);
+    if (btn) return btn;
+    if (el.matches(AI_PANEL_BOUNDARY)) break;
+    el = el.parentElement;
+  }
+  return null;
+}
+
 /**
  * Triggers draft generation in Gemini prompt box.
- * Clicks the "作成" / "Create" button if present, and dispatches Enter key events.
+ * Clicks the "作成" / "Create" button if present, otherwise dispatches Enter key events.
  */
 export function triggerAiSubmit(promptBox: HTMLElement): void {
   try {
@@ -113,19 +131,13 @@ export function triggerAiSubmit(promptBox: HTMLElement): void {
     // Ignore focus error
   }
 
-  // 1. Try finding and clicking submit button in surrounding container
-  const container =
-    promptBox.closest('.YfAtle, .idpN8c, div[role="dialog"]') ||
-    promptBox.parentElement;
-
-  if (container) {
-    const submitBtn = q<HTMLElement>(container, SEL.aiSubmitBtn);
-    if (submitBtn && typeof submitBtn.click === 'function') {
-      submitBtn.click();
-    }
+  // Clicking and also sending Enter could submit the prompt twice, so Enter is only a fallback
+  const submitBtn = findAiSubmitButton(promptBox);
+  if (submitBtn) {
+    submitBtn.click();
+    return;
   }
 
-  // 2. Dispatch Enter keyboard events (keydown, keypress, keyup)
   const enterInit: KeyboardEventInit = {
     key: 'Enter',
     code: 'Enter',

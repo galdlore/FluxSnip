@@ -1,5 +1,7 @@
 import {
+  DEFAULT_SETTINGS,
   PLATFORMS,
+  type KeyCombo,
   type Platform,
   type Settings,
   type Template,
@@ -34,6 +36,38 @@ export function buildExport(data: {
   };
 
   return JSON.stringify(payload, null, 2);
+}
+
+/**
+ * Rebuilds Settings from untrusted backup data, keeping only well-typed values
+ * and falling back to defaults for anything missing or malformed.
+ */
+function sanitizeImportedSettings(raw: unknown): Settings | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as { pickerShortcut?: unknown; enabled?: unknown };
+
+  let pickerShortcut = { ...DEFAULT_SETTINGS.pickerShortcut };
+  const sc = r.pickerShortcut as Partial<Record<keyof KeyCombo, unknown>> | undefined;
+  if (sc && typeof sc === 'object' && typeof sc.code === 'string' && sc.code.length > 0) {
+    pickerShortcut = {
+      code: sc.code,
+      ctrl: sc.ctrl === true,
+      alt: sc.alt === true,
+      shift: sc.shift === true,
+      meta: sc.meta === true,
+    };
+  }
+
+  const enabled = { ...DEFAULT_SETTINGS.enabled };
+  if (r.enabled && typeof r.enabled === 'object') {
+    const e = r.enabled as Record<string, unknown>;
+    for (const platform of PLATFORMS) {
+      const v = e[platform];
+      if (typeof v === 'boolean') enabled[platform] = v;
+    }
+  }
+
+  return { pickerShortcut, enabled };
 }
 
 export interface ImportPreview {
@@ -79,8 +113,11 @@ export function parseImport(json: string): ImportPreview {
     };
   }
 
-  if (raw.settings && typeof raw.settings === 'object') {
-    settings = raw.settings;
+  if (raw.settings !== undefined) {
+    settings = sanitizeImportedSettings(raw.settings);
+    if (!settings) {
+      errors.push('Invalid settings section: ignored');
+    }
   }
 
   const rawTemplates = raw.templates || {};
@@ -178,6 +215,13 @@ export async function applyImport(
 
       for (const item of importItems) {
         const existing = currentMap.get(item.id);
+        const keywordTaken = Array.from(currentMap.values()).some(
+          (other) => other.id !== item.id && other.keyword === item.keyword
+        );
+        if (keywordTaken) {
+          skipped++;
+          continue;
+        }
         if (!existing) {
           currentMap.set(item.id, item);
           added++;

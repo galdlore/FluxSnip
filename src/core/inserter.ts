@@ -1,8 +1,30 @@
 import { astToDom } from './html/ast';
-import { dispatchInput, sleep } from './dom';
+import { dispatchInput, sleep, waitFor } from './dom';
 import { t } from './i18n';
-import type { InsertMethod, InsertResult, RenderedContent } from './types';
+import { CURSOR_MARK, type InsertMethod, type InsertResult, type RenderedContent } from './types';
 import { showToast } from './ui/toast';
+
+function collectCursorMarkedTextNodes(root: Node, doc: Document): Text[] {
+  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const found: Text[] = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if ((n as Text).data.includes(CURSOR_MARK)) found.push(n as Text);
+  }
+  return found;
+}
+
+/**
+ * Removes every cursor mark and returns the position of the first one.
+ */
+function consumeCursorMarks(nodes: Text[]): { node: Text; offset: number } | null {
+  let target: { node: Text; offset: number } | null = null;
+  for (const node of nodes) {
+    const offset = node.data.indexOf(CURSOR_MARK);
+    node.data = node.data.split(CURSOR_MARK).join('');
+    if (!target && offset >= 0) target = { node, offset };
+  }
+  return target;
+}
 
 /**
  * Attempts to insert rendered template content into the editor
@@ -31,11 +53,16 @@ export async function insertContent(
         range.deleteContents();
 
         const domNode = astToDom(content.ast, doc);
+        const markedNodes = collectCursorMarkedTextNodes(domNode, doc);
         range.insertNode(domNode);
 
-        // Move caret after inserted node
+        const cursorTarget = consumeCursorMarks(markedNodes);
+
         try {
-          range.collapse(false);
+          if (cursorTarget) {
+            range.setStart(cursorTarget.node, cursorTarget.offset);
+          }
+          range.collapse(cursorTarget !== null);
           sel.removeAllRanges();
           sel.addRange(range);
         } catch {
@@ -61,16 +88,24 @@ export async function insertContent(
         });
 
         const notPrevented = editor.dispatchEvent(ev);
-        // Wait a tick for async handlers (e.g. Teams/Slack)
-        await sleep(60);
+        const readText = () => editor.innerText || editor.textContent || '';
 
-        const afterText = editor.innerText || editor.textContent || '';
-        const changed = beforeText !== afterText;
+        if (notPrevented) {
+          // A synthetic paste has no default action, so unless a listener inserted
+          // synchronously, nothing is coming: fall back right away.
+          if (readText() !== beforeText) {
+            return { ok: true, method: 'paste' };
+          }
+          continue;
+        }
 
-        // If defaultPrevented (listener handled it) and DOM changed, it succeeded
-        if ((!notPrevented && changed) || changed) {
+        // The editor took the paste and may apply it asynchronously (e.g. Teams CKEditor).
+        // Falling back too early would insert the content twice.
+        const changed = await waitFor(() => readText() !== beforeText, { timeout: 500, interval: 20 });
+        if (changed) {
           return { ok: true, method: 'paste' };
         }
+        console.warn('[FluxSnip] Paste was accepted by the editor but produced no change; falling back.');
       }
 
       if (method === 'insertText') {

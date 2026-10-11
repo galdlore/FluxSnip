@@ -131,7 +131,17 @@ export function createBackupView(): HTMLElement {
     if (currentPreview.errors.length > 0) {
       const errBox = document.createElement('div');
       errBox.className = 'preview-errors';
-      errBox.innerHTML = `<strong>${t('options_import_issues')}:</strong><ul>${currentPreview.errors.map((e) => `<li>${e}</li>`).join('')}</ul>`;
+      // Error strings embed names and values from the imported file: never parse them as HTML
+      const errTitle = document.createElement('strong');
+      errTitle.textContent = `${t('options_import_issues')}:`;
+      const errList = document.createElement('ul');
+      for (const message of currentPreview.errors) {
+        const li = document.createElement('li');
+        li.textContent = message;
+        errList.appendChild(li);
+      }
+      errBox.appendChild(errTitle);
+      errBox.appendChild(errList);
       previewBox.appendChild(errBox);
     }
 

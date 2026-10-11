@@ -70,6 +70,7 @@
   "options_var_to_email": { "message": "第1宛先のメールアドレス" },
   "options_var_from_name": { "message": "差出人氏名" },
   "options_var_from_email": { "message": "差出人メールアドレス" },
+  "options_var_cursor": { "message": "展開後のカーソル位置（Gmail 本文のみ。他では無視されます）" },
   "options_save_btn": { "message": "保存 (Ctrl+S)" },
   "options_duplicate_btn": { "message": "複製" },
   "options_delete_btn": { "message": "削除" },
