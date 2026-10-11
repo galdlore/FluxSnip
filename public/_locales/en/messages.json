@@ -93,6 +93,8 @@
   "options_gmail_to": { "message": "To Recipients" },
   "options_gmail_cc": { "message": "Cc Recipients" },
   "options_gmail_bcc": { "message": "Bcc Recipients" },
+  "options_gmail_auto_submit_ai": { "message": "Automatically submit when expanding in Gemini prompt" },
+  "options_gmail_auto_submit_ai_help": { "message": "When enabled, automatically submits the prompt to generate draft right after expanding in Gmail's Gemini prompt box. When disabled, the template text stays in the prompt box for manual editing." },
   "options_settings_shortcut_title": { "message": "Picker Shortcut" },
   "options_settings_shortcut_desc": { "message": "Keyboard shortcut to open the template picker dialog on compose windows." },
   "options_record_shortcut": { "message": "Record Shortcut" },

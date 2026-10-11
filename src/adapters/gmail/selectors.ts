@@ -20,6 +20,28 @@ export const SEL = {
   ],
 
   /**
+   * Gemini "Help me write" (下書き作成をサポート) prompt input box candidates.
+   */
+  aiPromptBox: [
+    'div[contenteditable="true"][aria-label*="メールの内容を説明してください"]',
+    'div[contenteditable="true"][aria-label*="Help me write"]',
+    'div.Pv5YRd.TIYGAd[contenteditable="true"]',
+    'div[enterkeyhint="send"][role="textbox"][contenteditable="true"]',
+    'div[jsname="ZeIRi"][contenteditable="true"]',
+  ],
+
+  /**
+   * Gemini prompt submission button (作成 / Create).
+   */
+  aiSubmitBtn: [
+    'button[aria-label*="作成"]',
+    'button[aria-label*="Create"]',
+    'div[role="button"][aria-label*="作成"]',
+    'div[role="button"][aria-label*="Create"]',
+    'button[type="submit"]',
+  ],
+
+  /**
    * Subject box input within compose window.
    */
   subjectBox: [

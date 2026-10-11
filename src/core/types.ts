@@ -44,6 +44,7 @@ export interface GmailTemplate extends BaseTemplate {
   bcc?: RecipientField;
   subject?: { mode: SubjectMode; value: string };
   from?: string; // alias email address
+  autoSubmitAi?: boolean; // When expanded in Gemini promptbox, automatically submit to generate
 }
 
 export interface TeamsTemplate extends BaseTemplate {

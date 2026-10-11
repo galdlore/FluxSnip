@@ -93,6 +93,8 @@
   "options_gmail_to": { "message": "To 宛先" },
   "options_gmail_cc": { "message": "Cc 宛先" },
   "options_gmail_bcc": { "message": "Bcc 宛先" },
+  "options_gmail_auto_submit_ai": { "message": "Gemini プロンプト展開時に自動で「作成」を実行する" },
+  "options_gmail_auto_submit_ai_help": { "message": "有効にすると、Gmail の Gemini プロンプト入力欄で定型文を展開した直後に生成を自動開始します。無効の場合は、プロンプト入力欄に展開された内容を確認・追記してから手動で実行できます。" },
   "options_settings_shortcut_title": { "message": "ピッカー呼び出しショートカット" },
   "options_settings_shortcut_desc": { "message": "作成画面上で定型文検索ピッカーを呼び出すためのショートカットキーです。" },
   "options_record_shortcut": { "message": "キーを記録" },

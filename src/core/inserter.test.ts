@@ -86,4 +86,19 @@ describe('inserter insertContent', () => {
     expect(result.method).toBe('clipboard');
     expect(writeMock).toHaveBeenCalled();
   });
+
+  it('skips dom method and inserts plain text when isPlain is true', async () => {
+    document.execCommand = vi.fn((cmd: string, _showUI: boolean, val?: string) => {
+      if (cmd === 'insertText' && val) {
+        editor.textContent = val;
+        return true;
+      }
+      return false;
+    });
+
+    const result = await insertContent(editor, mockContent, ['dom', 'insertText'], false, true);
+    expect(result.ok).toBe(true);
+    expect(result.method).toBe('insertText');
+    expect(editor.textContent).toBe('Inserted bold');
+  });
 });

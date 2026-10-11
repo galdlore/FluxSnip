@@ -21,8 +21,11 @@ export async function runTemplate(
   range: Range
 ): Promise<void> {
   try {
+    const isPlain = adapter.isPlainEditor?.(editor) ?? false;
+
     // 1. Apply non-body fields if supported (e.g. Gmail headers)
-    if (adapter.applyFields) {
+    // If editor is a plain input like Gemini prompt box, skip header fields to keep focus intact
+    if (adapter.applyFields && !isPlain) {
       try {
         const fieldResult = await adapter.applyFields(editor, template);
         if (fieldResult.failed && fieldResult.failed.length > 0) {
@@ -78,13 +81,33 @@ export async function runTemplate(
 
     // 5. Insert content into editor
     const isChat = adapter.platform === 'chat';
-    const result = await insertContent(targetEditor, rendered, adapter.insertOrder, isChat);
+    const insertOrder = adapter.getInsertOrder
+      ? adapter.getInsertOrder(targetEditor)
+      : adapter.insertOrder;
+
+    const result = await insertContent(
+      targetEditor,
+      rendered,
+      insertOrder,
+      isChat,
+      isPlain
+    );
 
     if (!result.ok) {
       showToast(
         t('toast_insert_failed') || 'Failed to insert template content.',
         'error'
       );
+      return;
+    }
+
+    // 6. Post-insertion triggers (e.g. Gemini AI auto-submit)
+    if (adapter.afterInsert) {
+      try {
+        await adapter.afterInsert(targetEditor, template);
+      } catch (err) {
+        console.warn('[FluxSnip] Error during afterInsert:', err);
+      }
     }
   } catch (err) {
     console.warn('[FluxSnip] Unexpected error during runTemplate:', err);

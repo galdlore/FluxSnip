@@ -28,4 +28,20 @@ export interface PlatformAdapter {
    * Ordered list of insertion methods to attempt for body insertion.
    */
   readonly insertOrder: InsertMethod[];
+
+  /**
+   * Optional custom insert order override for specific editor types (e.g. plain text for Gemini prompt box).
+   */
+  getInsertOrder?(editor: HTMLElement): InsertMethod[];
+
+  /**
+   * Checks whether this editor requires plain text insertion (e.g. Gemini AI promptbox).
+   */
+  isPlainEditor?(editor: HTMLElement): boolean;
+
+  /**
+   * Optional callback invoked after template insertion is completed.
+   * Allows platform adapters to handle platform-specific post-insertion triggers (e.g. Gemini AI auto-submit).
+   */
+  afterInsert?(editor: HTMLElement, template: Template): Promise<void> | void;
 }

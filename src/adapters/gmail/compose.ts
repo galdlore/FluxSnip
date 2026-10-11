@@ -47,6 +47,12 @@ export function findGmailBody(node: Node | null): HTMLElement | null {
     return null;
   }
 
+  // 0. Gemini AI prompt box check: return prompt box if caret is inside
+  const aiBox = el.closest<HTMLElement>(SEL.aiPromptBox.join(','));
+  if (aiBox) {
+    return aiBox;
+  }
+
   // 1. Direct body check (node is inside the compose body)
   let curr: Element | null = el;
   while (curr && curr !== document.body && curr !== document.documentElement) {
@@ -86,5 +92,51 @@ export function findGmailBody(node: Node | null): HTMLElement | null {
   }
 
   return null;
+}
+
+/**
+ * Checks if the element is Gemini AI prompt input box.
+ */
+export function isAiPromptBox(element: Element | null): boolean {
+  if (!element) return false;
+  return matchesAny(element, SEL.aiPromptBox);
+}
+
+/**
+ * Triggers draft generation in Gemini prompt box.
+ * Clicks the "作成" / "Create" button if present, and dispatches Enter key events.
+ */
+export function triggerAiSubmit(promptBox: HTMLElement): void {
+  try {
+    promptBox.focus();
+  } catch {
+    // Ignore focus error
+  }
+
+  // 1. Try finding and clicking submit button in surrounding container
+  const container =
+    promptBox.closest('.YfAtle, .idpN8c, div[role="dialog"]') ||
+    promptBox.parentElement;
+
+  if (container) {
+    const submitBtn = q<HTMLElement>(container, SEL.aiSubmitBtn);
+    if (submitBtn && typeof submitBtn.click === 'function') {
+      submitBtn.click();
+    }
+  }
+
+  // 2. Dispatch Enter keyboard events (keydown, keypress, keyup)
+  const enterInit: KeyboardEventInit = {
+    key: 'Enter',
+    code: 'Enter',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  };
+
+  promptBox.dispatchEvent(new KeyboardEvent('keydown', enterInit));
+  promptBox.dispatchEvent(new KeyboardEvent('keypress', enterInit));
+  promptBox.dispatchEvent(new KeyboardEvent('keyup', enterInit));
 }
 

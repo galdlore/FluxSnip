@@ -127,11 +127,37 @@ export function createGmailFields(): GmailFieldsComponent {
   const ccField = createRecipientRow('cc', 'options_gmail_cc');
   const bccField = createRecipientRow('bcc', 'options_gmail_bcc');
 
+  // Gemini AI prompt auto submit checkbox
+  const aiGroup = document.createElement('div');
+  aiGroup.className = 'form-group form-group-checkbox';
+
+  const aiLabel = document.createElement('label');
+  aiLabel.className = 'checkbox-label';
+
+  const aiCheckbox = document.createElement('input');
+  aiCheckbox.type = 'checkbox';
+  aiCheckbox.id = 'gmail-auto-submit-ai-checkbox';
+  aiCheckbox.addEventListener('change', notifyChange);
+
+  const aiText = document.createElement('span');
+  aiText.textContent = t('options_gmail_auto_submit_ai');
+
+  aiLabel.appendChild(aiCheckbox);
+  aiLabel.appendChild(aiText);
+
+  const aiHelp = document.createElement('span');
+  aiHelp.className = 'form-help-text';
+  aiHelp.textContent = t('options_gmail_auto_submit_ai_help');
+
+  aiGroup.appendChild(aiLabel);
+  aiGroup.appendChild(aiHelp);
+
   container.appendChild(fromGroup);
   container.appendChild(subjectGroup);
   container.appendChild(toField.group);
   container.appendChild(ccField.group);
   container.appendChild(bccField.group);
+  container.appendChild(aiGroup);
 
   return {
     element: container,
@@ -159,6 +185,8 @@ export function createGmailFields(): GmailFieldsComponent {
       applyRec(toField, tpl.to);
       applyRec(ccField, tpl.cc);
       applyRec(bccField, tpl.bcc);
+
+      aiCheckbox.checked = !!tpl.autoSubmitAi;
     },
     getValues(): Partial<GmailTemplate> {
       const fromVal = fromInput.value.trim();
@@ -184,6 +212,7 @@ export function createGmailFields(): GmailFieldsComponent {
         to: parseRec(toField),
         cc: parseRec(ccField),
         bcc: parseRec(bccField),
+        autoSubmitAi: aiCheckbox.checked,
       };
     },
     onChange(cb: () => void) {

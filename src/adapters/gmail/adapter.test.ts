@@ -174,4 +174,107 @@ describe('gmail adapter and compose detection', () => {
     const subj = document.querySelector('input[name="subjectbox"]') as HTMLInputElement;
     expect(subj.value).toBe('Updated Subject');
   });
+
+  describe('Gemini AI prompt box integration', () => {
+    it('detects Gemini prompt box as active editor', () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('enterkeyhint', 'send');
+      aiPromptBox.setAttribute('aria-label', 'メールの内容を説明してください');
+      aiPromptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      const childSpan = document.createElement('span');
+      childSpan.textContent = 'prompt prefix';
+      aiPromptBox.appendChild(childSpan);
+      dialog.appendChild(aiPromptBox);
+
+      // Direct detection
+      expect(gmailAdapter.findEditor(aiPromptBox)).toBe(aiPromptBox);
+      // Child node detection
+      expect(gmailAdapter.findEditor(childSpan)).toBe(aiPromptBox);
+
+      // Check isPlainEditor & getInsertOrder
+      expect(gmailAdapter.isPlainEditor?.(aiPromptBox)).toBe(true);
+      expect(gmailAdapter.getInsertOrder?.(aiPromptBox)).toEqual(['insertText', 'paste', 'clipboard']);
+    });
+
+    it('afterInsert dispatches Enter key event and clicks submit button when autoSubmitAi is true', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const container = document.createElement('div');
+      container.className = 'idpN8c k6dJm';
+
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('enterkeyhint', 'send');
+      aiPromptBox.setAttribute('aria-label', 'メールの内容を説明してください');
+      aiPromptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      container.appendChild(aiPromptBox);
+
+      const submitBtn = document.createElement('button');
+      submitBtn.setAttribute('aria-label', '作成');
+      let clicked = false;
+      submitBtn.addEventListener('click', () => {
+        clicked = true;
+      });
+      container.appendChild(submitBtn);
+      dialog.appendChild(container);
+
+      let enterDispatched = false;
+      aiPromptBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') enterDispatched = true;
+      });
+
+      const templateAuto: any = {
+        id: 'tpl-ai-1',
+        platform: 'gmail',
+        name: 'AI Prompt Auto',
+        keyword: ';ai',
+        tags: [],
+        bodyHtml: '<p>Please write email</p>',
+        bodyAst: [],
+        createdAt: 100,
+        updatedAt: 100,
+        autoSubmitAi: true,
+      };
+
+      await gmailAdapter.afterInsert?.(aiPromptBox, templateAuto);
+
+      expect(enterDispatched).toBe(true);
+      expect(clicked).toBe(true);
+    });
+
+    it('afterInsert does not trigger submit when autoSubmitAi is false or undefined', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('aria-label', 'メールの内容を説明してください');
+      aiPromptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      dialog.appendChild(aiPromptBox);
+
+      let enterDispatched = false;
+      aiPromptBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') enterDispatched = true;
+      });
+
+      const templateManual: any = {
+        id: 'tpl-ai-2',
+        platform: 'gmail',
+        name: 'AI Prompt Manual',
+        keyword: ';aim',
+        tags: [],
+        bodyHtml: '<p>Please write email</p>',
+        bodyAst: [],
+        createdAt: 100,
+        updatedAt: 100,
+        autoSubmitAi: false,
+      };
+
+      await gmailAdapter.afterInsert?.(aiPromptBox, templateManual);
+
+      expect(enterDispatched).toBe(false);
+    });
+  });
 });

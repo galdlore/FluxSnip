@@ -12,13 +12,16 @@ export async function insertContent(
   editor: HTMLElement,
   content: RenderedContent,
   order: InsertMethod[],
-  useChatText: boolean
+  useChatText: boolean,
+  isPlain = false
 ): Promise<InsertResult> {
   const plainText = useChatText ? content.chatText : content.text;
 
   for (const method of order) {
     try {
       if (method === 'dom') {
+        if (isPlain) continue;
+
         const doc = editor.ownerDocument || document;
         const win = doc.defaultView || window;
         const sel = win.getSelection();
@@ -45,7 +48,9 @@ export async function insertContent(
 
       if (method === 'paste') {
         const dt = new DataTransfer();
-        dt.setData('text/html', content.html);
+        if (!isPlain) {
+          dt.setData('text/html', content.html);
+        }
         dt.setData('text/plain', plainText);
 
         const beforeText = editor.innerText || editor.textContent || '';
@@ -72,8 +77,8 @@ export async function insertContent(
         const beforeText = editor.innerText || editor.textContent || '';
         let success = false;
 
-        if (useChatText && plainText.includes('\n')) {
-          // In Google Chat, dispatch line-by-line with insertLineBreak (Shift+Enter equivalent) to prevent premature submission
+        if ((useChatText || isPlain) && plainText.includes('\n')) {
+          // Dispatch line-by-line with insertLineBreak (Shift+Enter equivalent) to prevent premature submission
           const lines = plainText.split('\n');
           success = true;
           for (let i = 0; i < lines.length; i++) {

@@ -78,4 +78,37 @@ describe('runner runTemplate pipeline', () => {
     // Template content is still inserted even if field failed
     expect(editor.textContent).toContain('Hello !');
   });
+
+  it('skips applyFields and invokes afterInsert when isPlainEditor is true', async () => {
+    document.execCommand = vi.fn((cmd: string, _showUI: boolean, val?: string) => {
+      if (cmd === 'insertText' && val) {
+        editor.textContent = val;
+        return true;
+      }
+      return false;
+    });
+
+    const applyFieldsMock = vi.fn().mockResolvedValue({ failed: [] });
+    const afterInsertMock = vi.fn().mockResolvedValue(undefined);
+
+    const mockAdapter: PlatformAdapter = {
+      platform: 'gmail',
+      findEditor: () => editor,
+      insertOrder: ['insertText'],
+      applyFields: applyFieldsMock,
+      collectVars: vi.fn().mockResolvedValue({}),
+      isPlainEditor: () => true,
+      afterInsert: afterInsertMock,
+    };
+
+    const targetRange = document.createRange();
+    targetRange.selectNodeContents(editor);
+
+    await runTemplate(mockAdapter, editor, mockTemplate, targetRange);
+
+    // applyFields must be skipped for plain editors (Gemini prompt box)
+    expect(applyFieldsMock).not.toHaveBeenCalled();
+    // afterInsert must be invoked
+    expect(afterInsertMock).toHaveBeenCalledWith(editor, mockTemplate);
+  });
 });

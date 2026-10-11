@@ -1,8 +1,8 @@
 import type { PlatformAdapter } from '@/core/adapter';
 import { sleep } from '@/core/dom';
 import { splitName } from '@/core/engine';
-import type { GmailTemplate, Person, Template, TemplateVars } from '@/core/types';
-import { findComposeRoot, findGmailBody } from './compose';
+import type { GmailTemplate, InsertMethod, Person, Template, TemplateVars } from '@/core/types';
+import { findComposeRoot, findGmailBody, isAiPromptBox, triggerAiSubmit } from './compose';
 import { readFrom, selectFrom } from './from';
 import { applyRecipientField, readRecipients } from './recipients';
 import { applySubject } from './subject';
@@ -160,4 +160,24 @@ export const gmailAdapter: PlatformAdapter = {
   },
 
   insertOrder: ['dom', 'paste', 'clipboard'],
+
+  getInsertOrder(editor: HTMLElement): InsertMethod[] {
+    if (isAiPromptBox(editor)) {
+      return ['insertText', 'paste', 'clipboard'];
+    }
+    return ['dom', 'paste', 'clipboard'];
+  },
+
+  isPlainEditor(editor: HTMLElement): boolean {
+    return isAiPromptBox(editor);
+  },
+
+  async afterInsert(editor: HTMLElement, template: Template): Promise<void> {
+    if (template.platform !== 'gmail') return;
+    const gt = template as GmailTemplate;
+    if (isAiPromptBox(editor) && gt.autoSubmitAi) {
+      await sleep(150);
+      triggerAiSubmit(editor);
+    }
+  },
 };
