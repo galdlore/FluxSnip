@@ -298,6 +298,9 @@ export function astToChatText(nodes: AstNode[]): string {
   return raw
     .replace(/\r\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
+    // Ensure word-boundary spaces around '_' italics when directly adjacent to alphanumeric or CJK characters
+    .replace(/([^\s*_~`])_([^\s_].*?[^\s_]|[^_\s])_/g, '$1 _$2_')
+    .replace(/_([^\s_].*?[^\s_]|[^_\s])_([^\s*_~`])/g, '_$1_ $2')
     .trim();
 }
 

@@ -99,6 +99,22 @@ describe('ast serializers', () => {
     expect(chatText).toContain('```\nconsole.log("hi");\n```');
   });
 
+  it('ensures word-boundary space around underscore italics when adjacent to CJK or alphanumeric text', () => {
+    const ast: AstNode[] = [
+      {
+        t: 'p',
+        c: [
+          { t: '#text', v: '書体テスト' },
+          { t: 'i', c: [{ t: '#text', v: 'を実施' }] },
+          { t: '#text', v: 'いたします' },
+        ],
+      },
+    ];
+
+    const chatText = astToChatText(ast);
+    expect(chatText).toBe('書体テスト _を実施_ いたします');
+  });
+
   it('astToDom safely creates DOM nodes without innerHTML and drops unsafe href', () => {
     const ast: AstNode[] = [
       {

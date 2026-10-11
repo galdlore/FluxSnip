@@ -49,7 +49,7 @@ describe('Google Chat Adapter', () => {
 
   it('has platform chat and expected insertOrder', () => {
     expect(chatAdapter.platform).toBe('chat');
-    expect(chatAdapter.insertOrder).toEqual(['insertText', 'paste', 'clipboard']);
+    expect(chatAdapter.insertOrder).toEqual(['paste', 'insertText', 'clipboard']);
   });
 
   it('detects Chat message input from direct element', () => {

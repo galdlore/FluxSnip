@@ -8,7 +8,9 @@ import { matchesAny, q, SEL } from './selectors';
 export const chatAdapter: PlatformAdapter = {
   platform: 'chat',
 
-  insertOrder: ['insertText', 'paste', 'clipboard'] as InsertMethod[],
+  // Prefers paste (synthesized ClipboardEvent with text/html) to preserve rich text (Bold, Italic, Underline, Strike)
+  // Falls back to line-by-line insertText to prevent premature submission on platforms without paste support
+  insertOrder: ['paste', 'insertText', 'clipboard'] as InsertMethod[],
 
   findEditor(node: Node | null): HTMLElement | null {
     if (!node) return null;
