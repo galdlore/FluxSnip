@@ -199,7 +199,7 @@ describe('gmail adapter and compose detection', () => {
       expect(gmailAdapter.getInsertOrder?.(aiPromptBox)).toEqual(['insertText', 'paste', 'clipboard']);
     });
 
-    it('afterInsert dispatches Enter key event and clicks submit button when autoSubmitAi is true', async () => {
+    it('afterInsert clicks the submit button only (no extra Enter) when autoSubmitAi is true', async () => {
       const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
       const container = document.createElement('div');
       container.className = 'idpN8c k6dJm';
@@ -241,8 +241,49 @@ describe('gmail adapter and compose detection', () => {
 
       await gmailAdapter.afterInsert?.(aiPromptBox, templateAuto);
 
-      expect(enterDispatched).toBe(true);
       expect(clicked).toBe(true);
+      expect(enterDispatched).toBe(false);
+    });
+
+    it('afterInsert falls back to Enter and never clicks buttons outside the Gemini panel', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const panel = document.createElement('div');
+      panel.className = 'idpN8c';
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('aria-label', 'メールの内容を説明してください');
+      panel.appendChild(aiPromptBox);
+      dialog.appendChild(panel);
+
+      const unrelatedBtn = document.createElement('button');
+      unrelatedBtn.setAttribute('aria-label', 'イベントを作成');
+      let unrelatedClicked = false;
+      unrelatedBtn.addEventListener('click', () => {
+        unrelatedClicked = true;
+      });
+      dialog.appendChild(unrelatedBtn);
+
+      let enterDispatched = false;
+      aiPromptBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') enterDispatched = true;
+      });
+
+      await gmailAdapter.afterInsert?.(aiPromptBox, {
+        id: 'tpl-ai-3',
+        platform: 'gmail',
+        name: 'AI',
+        keyword: ';ai3',
+        tags: [],
+        bodyHtml: '',
+        bodyAst: [],
+        createdAt: 1,
+        updatedAt: 1,
+        autoSubmitAi: true,
+      });
+
+      expect(unrelatedClicked).toBe(false);
+      expect(enterDispatched).toBe(true);
     });
 
     it('afterInsert does not trigger submit when autoSubmitAi is false or undefined', async () => {
