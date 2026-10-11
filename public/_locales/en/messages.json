@@ -70,6 +70,7 @@
   "options_var_to_email": { "message": "Primary recipient's email" },
   "options_var_from_name": { "message": "Sender name" },
   "options_var_from_email": { "message": "Sender email" },
+  "options_var_cursor": { "message": "Caret position after expansion (Gmail body only; ignored elsewhere)" },
   "options_save_btn": { "message": "Save (Ctrl+S)" },
   "options_duplicate_btn": { "message": "Duplicate" },
   "options_delete_btn": { "message": "Delete" },

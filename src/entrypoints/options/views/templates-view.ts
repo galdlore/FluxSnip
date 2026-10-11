@@ -138,6 +138,7 @@ export function createTemplatesView(platform: Platform): HTMLElement {
       <tr><td><code>{{date:YYYY年M月D日}}</code></td><td>${t('options_var_date_custom')}</td></tr>
       <tr><td><code>{{time}}</code></td><td>${t('options_var_time')} (HH:mm)</td></tr>
       <tr><td><code>{{weekday}}</code></td><td>${t('options_var_weekday')}</td></tr>
+      <tr><td><code>{{cursor}}</code></td><td>${t('options_var_cursor')}</td></tr>
       ${
         platform === 'gmail'
           ? `
