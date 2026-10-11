@@ -1,6 +1,6 @@
 import { astToDom } from './html/ast';
 import { dispatchInput, sleep, waitFor } from './dom';
-import { t } from './i18n';
+import { tOr } from './i18n';
 import { CURSOR_MARK, type InsertMethod, type InsertResult, type RenderedContent } from './types';
 import { showToast } from './ui/toast';
 
@@ -38,14 +38,14 @@ export async function insertContent(
   isPlain = false
 ): Promise<InsertResult> {
   const plainText = useChatText ? content.chatText : content.text;
+  const doc = editor.ownerDocument || document;
+  const win = doc.defaultView || window;
 
   for (const method of order) {
     try {
       if (method === 'dom') {
         if (isPlain) continue;
 
-        const doc = editor.ownerDocument || document;
-        const win = doc.defaultView || window;
         const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
@@ -118,17 +118,17 @@ export async function insertContent(
           success = true;
           for (let i = 0; i < lines.length; i++) {
             if (lines[i]) {
-              success = document.execCommand('insertText', false, lines[i]) && success;
+              success = doc.execCommand('insertText', false, lines[i]) && success;
             }
             if (i < lines.length - 1) {
-              const brSuccess = document.execCommand('insertLineBreak');
+              const brSuccess = doc.execCommand('insertLineBreak');
               if (!brSuccess) {
-                document.execCommand('insertParagraph');
+                doc.execCommand('insertParagraph');
               }
             }
           }
         } else {
-          success = document.execCommand('insertText', false, plainText);
+          success = doc.execCommand('insertText', false, plainText);
         }
 
         await sleep(30);
@@ -141,7 +141,7 @@ export async function insertContent(
 
       if (method === 'clipboard') {
         // Delete current selection / token range first
-        const sel = window.getSelection();
+        const sel = win.getSelection();
         if (sel && sel.rangeCount > 0) {
           sel.getRangeAt(0).deleteContents();
         }
@@ -156,7 +156,7 @@ export async function insertContent(
           }),
         ]);
 
-        showToast(t('toast_clipboard_ready') || 'Copied to clipboard. Press Ctrl+V to paste.', 'info');
+        showToast(tOr('toast_clipboard_ready', 'Copied to clipboard. Press Ctrl+V to paste.'), 'info');
         return { ok: true, method: 'clipboard' };
       }
     } catch (err) {
