@@ -173,6 +173,12 @@
   "picker_open_options": { "message": "オプションを開いて作成する" },
   "toast_clipboard_ready": { "message": "クリップボードにコピーしました。Ctrl+V で貼り付けてください。" },
   "toast_fields_failed": { "message": "一部の宛先・件名フィールドを設定できませんでした: $1" },
+  "field_label_from": { "message": "差出人" },
+  "field_label_to": { "message": "To" },
+  "field_label_cc": { "message": "Cc" },
+  "field_label_bcc": { "message": "Bcc" },
+  "field_label_subject": { "message": "件名" },
+  "field_label_compose_root_not_found": { "message": "作成ウィンドウが見つかりません" },
   "toast_insert_failed": { "message": "テンプレートの挿入に失敗しました。" },
   "toast_unexpected_error": { "message": "テンプレート挿入中に予期せぬエラーが発生しました。" }
 }

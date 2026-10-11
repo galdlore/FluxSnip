@@ -1,5 +1,5 @@
 import { astToPlainText } from '../html/ast';
-import { t } from '../i18n';
+import { tOr } from '../i18n';
 import type { Template } from '../types';
 import { UI_STYLES } from './theme';
 
@@ -127,7 +127,7 @@ export function openPicker(opts: PickerOptions): { close(): void } {
   const searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.className = 'picker-search-input';
-  searchInput.placeholder = t('picker_search_placeholder') || 'Search templates...';
+  searchInput.placeholder = tOr('picker_search_placeholder', 'Search templates...');
 
   searchWrap.appendChild(searchIcon);
   searchWrap.appendChild(searchInput);
@@ -153,9 +153,9 @@ export function openPicker(opts: PickerOptions): { close(): void } {
     return span;
   };
 
-  hints.appendChild(createKbdHint('↑↓', t('picker_hint_select') || 'Select'));
-  hints.appendChild(createKbdHint('Enter', t('picker_hint_insert') || 'Insert'));
-  hints.appendChild(createKbdHint('Esc', t('picker_hint_close') || 'Close'));
+  hints.appendChild(createKbdHint('↑↓', tOr('picker_hint_select', 'Select')));
+  hints.appendChild(createKbdHint('Enter', tOr('picker_hint_insert', 'Insert')));
+  hints.appendChild(createKbdHint('Esc', tOr('picker_hint_close', 'Close')));
   footer.appendChild(hints);
 
   card.appendChild(searchWrap);
@@ -207,13 +207,13 @@ export function openPicker(opts: PickerOptions): { close(): void } {
       empty.className = 'picker-empty-state';
 
       const msg = document.createElement('span');
-      msg.textContent = t('picker_no_templates') || 'No templates found.';
+      msg.textContent = tOr('picker_no_templates', 'No templates found.');
       empty.appendChild(msg);
 
       const optBtn = document.createElement('button');
       optBtn.type = 'button';
       optBtn.className = 'picker-options-link';
-      optBtn.textContent = t('picker_open_options') || 'Open Options to create templates';
+      optBtn.textContent = tOr('picker_open_options', 'Open Options to create templates');
       optBtn.onclick = () => {
         try {
           browser.runtime.sendMessage({ type: 'openOptions' });

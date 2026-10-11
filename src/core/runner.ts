@@ -1,7 +1,7 @@
 import type { PlatformAdapter } from './adapter';
 import { restoreRange } from './dom';
 import { renderTemplate } from './engine';
-import { t } from './i18n';
+import { tOr } from './i18n';
 import { insertContent } from './inserter';
 import type { Template, TemplateVars } from './types';
 import { showToast } from './ui/toast';
@@ -29,9 +29,11 @@ export async function runTemplate(
       try {
         const fieldResult = await adapter.applyFields(editor, template);
         if (fieldResult.failed && fieldResult.failed.length > 0) {
-          const names = fieldResult.failed.join(', ');
+          const names = fieldResult.failed
+            .map((field) => tOr(`field_label_${field}`, field))
+            .join(', ');
           showToast(
-            t('toast_fields_failed', names) || `Could not set some fields: ${names}`,
+            tOr('toast_fields_failed', `Could not set some fields: ${names}`, names),
             'warn'
           );
         }
@@ -95,7 +97,7 @@ export async function runTemplate(
 
     if (!result.ok) {
       showToast(
-        t('toast_insert_failed') || 'Failed to insert template content.',
+        tOr('toast_insert_failed', 'Failed to insert template content.'),
         'error'
       );
       return;
@@ -112,7 +114,7 @@ export async function runTemplate(
   } catch (err) {
     console.warn('[FluxSnip] Unexpected error during runTemplate:', err);
     showToast(
-      t('toast_unexpected_error') || 'An unexpected error occurred during insertion.',
+      tOr('toast_unexpected_error', 'An unexpected error occurred during insertion.'),
       'error'
     );
   }

@@ -172,6 +172,12 @@
   "picker_no_templates": { "message": "No matching templates found." },
   "picker_open_options": { "message": "Open Options to create templates" },
   "toast_clipboard_ready": { "message": "Copied to clipboard. Press Ctrl+V to paste." },
+  "field_label_from": { "message": "From" },
+  "field_label_to": { "message": "To" },
+  "field_label_cc": { "message": "Cc" },
+  "field_label_bcc": { "message": "Bcc" },
+  "field_label_subject": { "message": "Subject" },
+  "field_label_compose_root_not_found": { "message": "compose window not found" },
   "toast_fields_failed": { "message": "Could not set some header fields: $1" },
   "toast_insert_failed": { "message": "Failed to insert template content." },
   "toast_unexpected_error": { "message": "An unexpected error occurred during insertion." }
