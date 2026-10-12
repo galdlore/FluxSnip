@@ -183,35 +183,49 @@ export const gmailAdapter: PlatformAdapter = {
       const root = findComposeRoot(editor);
       const dialogEl = root?.closest<HTMLElement>('div[role="dialog"], div[role="region"]') || root;
       if (root) {
-        // If formatting options toolbar or popup is active, dismiss it first
-        const formatToggle =
-          q<HTMLElement>(root, SEL.formatToolbarToggleActive) ||
-          (dialogEl ? q<HTMLElement>(dialogEl, SEL.formatToolbarToggleActive) : null);
-        if (formatToggle) {
-          clickGmailButton(formatToggle);
-          await sleep(250);
-        }
+        let promptBox =
+          q<HTMLElement>(root, SEL.aiPromptBox) ||
+          (dialogEl ? q<HTMLElement>(dialogEl, SEL.aiPromptBox) : null);
 
         let sdtBtn = q<HTMLElement>(root, SEL.aiHelpBtn);
         if (!sdtBtn && dialogEl) {
           sdtBtn = q<HTMLElement>(dialogEl, SEL.aiHelpBtn);
         }
-        if (sdtBtn) {
-          clickGmailButton(sdtBtn);
+
+        // Check if Gemini prompt box or help panel is already open to avoid toggling it closed
+        const isAlreadyOpen =
+          Boolean(promptBox && (promptBox.isContentEditable || promptBox.getAttribute('contenteditable') === 'true')) ||
+          Boolean(sdtBtn && (sdtBtn.getAttribute('aria-expanded') === 'true' || sdtBtn.classList.contains('J-Z-I-Jp')));
+
+        if (!isAlreadyOpen) {
+          // If formatting options toolbar or popup is active, dismiss it first
+          const formatToggle =
+            q<HTMLElement>(root, SEL.formatToolbarToggleActive) ||
+            (dialogEl ? q<HTMLElement>(dialogEl, SEL.formatToolbarToggleActive) : null);
+          if (formatToggle) {
+            clickGmailButton(formatToggle);
+            await sleep(250);
+          }
+
+          if (sdtBtn) {
+            clickGmailButton(sdtBtn);
+          }
         }
 
-        let promptBox = await waitFor(
-          () => {
-            const el =
-              q<HTMLElement>(root, SEL.aiPromptBox) ||
-              (dialogEl ? q<HTMLElement>(dialogEl, SEL.aiPromptBox) : null);
-            return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
-          },
-          { timeout: 3000, interval: 50 }
-        );
-
-        // Fallback: if panel didn't open from initial click, try safe fallback
         if (!promptBox) {
+          promptBox = await waitFor(
+            () => {
+              const el =
+                q<HTMLElement>(root, SEL.aiPromptBox) ||
+                (dialogEl ? q<HTMLElement>(dialogEl, SEL.aiPromptBox) : null);
+              return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
+            },
+            { timeout: 3000, interval: 50 }
+          );
+        }
+
+        // Fallback: if panel didn't open from initial click and wasn't already open, try safe fallback
+        if (!promptBox && !isAlreadyOpen) {
           const isBlank = (editor.textContent?.trim() || '').length === 0;
           if (isBlank) {
             try {
@@ -244,7 +258,30 @@ export const gmailAdapter: PlatformAdapter = {
 
         if (promptBox) {
           await sleep(80);
-          // Strictly focus promptBox and position selection inside it to prevent leaking to mail body
+          // Strictly focus promptBox and select all contents to overwrite cleanly
+          try {
+            promptBox.focus();
+            const doc = promptBox.ownerDocument || document;
+            const win = doc.defaultView || window;
+            const sel = win.getSelection();
+            if (sel) {
+              const r = doc.createRange();
+              r.selectNodeContents(promptBox);
+              sel.removeAllRanges();
+              sel.addRange(r);
+            }
+          } catch {
+            // Ignore selection setup error
+          }
+
+          const aiTpl: Template = {
+            ...template,
+            bodyAst: [{ t: 'p', c: [{ t: '#text', v: gt.aiPrompt }] }],
+          };
+          const aiRendered = renderTemplate(aiTpl, vars);
+          await insertContent(promptBox, aiRendered, ['insertText', 'dom', 'paste'], false, true);
+
+          // Keep caret inside promptBox after insertion
           try {
             promptBox.focus();
             const doc = promptBox.ownerDocument || document;
@@ -260,13 +297,6 @@ export const gmailAdapter: PlatformAdapter = {
           } catch {
             // Ignore selection setup error
           }
-
-          const aiTpl: Template = {
-            ...template,
-            bodyAst: [{ t: 'p', c: [{ t: '#text', v: gt.aiPrompt }] }],
-          };
-          const aiRendered = renderTemplate(aiTpl, vars);
-          await insertContent(promptBox, aiRendered, ['insertText', 'dom', 'paste'], false, true);
 
           if (gt.autoSubmitAi) {
             await sleep(200);

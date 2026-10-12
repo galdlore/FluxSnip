@@ -439,5 +439,54 @@ describe('gmail adapter and compose detection', () => {
 
       expect(sendClicked).toBe(true);
     });
+
+    it('afterInsert does not click sdt button when prompt box is already open and populates prompt', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const bodyEl = document.querySelector('div.editable') as HTMLElement;
+
+      const promptBox = document.createElement('div');
+      promptBox.setAttribute('contenteditable', 'true');
+      promptBox.setAttribute('role', 'textbox');
+      promptBox.setAttribute('aria-label', 'メールの内容を説明してください');
+      promptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      dialog.appendChild(promptBox);
+
+      const sdtBtn = document.createElement('div');
+      sdtBtn.setAttribute('command', 'sdt');
+      sdtBtn.setAttribute('aria-expanded', 'true');
+      let sdtClicked = false;
+      sdtBtn.addEventListener('click', () => {
+        sdtClicked = true;
+      });
+      dialog.appendChild(sdtBtn);
+
+      const templateWithAi: any = {
+        id: 'tpl-ai-open',
+        platform: 'gmail',
+        name: 'AI Template Open',
+        keyword: ';aie',
+        tags: [],
+        bodyHtml: '<p>Regular body</p>',
+        bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'Regular body' }] }],
+        aiPrompt: 'Prompt for already open box',
+        createdAt: 100,
+        updatedAt: 100,
+      };
+
+      document.execCommand = vi.fn((cmd: string, showUI: boolean, val?: string) => {
+        if (cmd === 'insertText' && val) {
+          const active = document.activeElement as HTMLElement;
+          if (active) active.textContent = val;
+          return true;
+        }
+        return false;
+      });
+
+      await gmailAdapter.afterInsert?.(bodyEl, templateWithAi, { now: new Date(), locale: 'ja' });
+
+      expect(sdtClicked).toBe(false);
+      expect(document.activeElement).toBe(promptBox);
+      expect(promptBox.textContent).toBe('Prompt for already open box');
+    });
   });
 });

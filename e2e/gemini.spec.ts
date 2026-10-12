@@ -65,3 +65,40 @@ test('expanding a template with aiPrompt when formatting toolbar is open dismiss
   await expect(compose.aiPromptBox).toBeVisible({ timeout: 15_000 });
   await expect(compose.aiPromptBox).toContainText(PROMPT_TEXT);
 });
+
+test('expanding a template with aiPrompt when Gemini prompt box is already open keeps Gemini box open and populates prompt', async ({
+  compose,
+}) => {
+  const hasGemini = await compose.hasGemini();
+  test.skip(!hasGemini, 'This Google account does not have Gemini (Help me write) enabled. Sign in with an eligible account via "npm run e2e:login".');
+
+  const PROMPT_TEXT = 'Elaborate on next action items clearly';
+  const BODY_TEXT = 'Initial body text for already open Gemini test';
+
+  // 1. Open Gemini prompt box first
+  if (!(await compose.aiPromptBox.isVisible().catch(() => false))) {
+    await compose.aiHelpBtn.click();
+    await expect(compose.aiPromptBox).toBeVisible({ timeout: 10_000 });
+  }
+
+  // 2. Register template
+  await compose.setTemplates([
+    {
+      keyword: ';e2eaiopen',
+      text: BODY_TEXT,
+      aiPrompt: PROMPT_TEXT,
+    },
+  ]);
+
+  // 3. Focus back to compose body and expand template
+  await compose.expand(';e2eaiopen');
+
+  // Verify body contains template text and does NOT contain the AI prompt
+  await expect(compose.body).toContainText(BODY_TEXT);
+  await expect(compose.body).not.toContainText(PROMPT_TEXT);
+
+  // Verify Gemini prompt box is STILL open (not toggled closed) and contains the prompt
+  await expect(compose.aiPromptBox).toBeVisible({ timeout: 15_000 });
+  await expect(compose.aiPromptBox).toContainText(PROMPT_TEXT);
+});
+
