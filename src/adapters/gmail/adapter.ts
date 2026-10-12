@@ -182,17 +182,29 @@ export const gmailAdapter: PlatformAdapter = {
           { timeout: 3000, interval: 50 }
         );
 
-        // Fallback: if panel didn't open from click, send synthetic Alt+H to the editor
+        // Fallback: if panel didn't open from initial click, try safe fallback
         if (!promptBox) {
-          editor.dispatchEvent(
-            new KeyboardEvent('keydown', {
-              key: 'h',
-              code: 'KeyH',
-              altKey: true,
-              bubbles: true,
-              cancelable: true,
-            })
-          );
+          const isBlank = (editor.textContent?.trim() || '').length === 0;
+          if (isBlank) {
+            // In a blank compose body, pressing '/' opens the Help me write prompt box
+            try {
+              editor.focus();
+            } catch {
+              // Ignore focus error
+            }
+            editor.dispatchEvent(
+              new KeyboardEvent('keydown', {
+                key: '/',
+                code: 'Slash',
+                bubbles: true,
+                cancelable: true,
+              })
+            );
+          } else if (sdtBtn) {
+            // In non-blank body, re-click sdtBtn (avoid Alt+H as it triggers automatic proofreading)
+            sdtBtn.click();
+          }
+
           promptBox = await waitFor(
             () => {
               const el = q<HTMLElement>(root, SEL.aiPromptBox);
