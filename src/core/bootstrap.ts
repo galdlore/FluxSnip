@@ -157,10 +157,20 @@ export function startContent(adapters: PlatformAdapter[]): () => void {
         if (rect.width > 0 || rect.height > 0) {
           anchorRect = rect;
         } else {
-          anchorRect = editor.getBoundingClientRect();
+          // Check getClientRects() for collapsed ranges in empty blocks
+          const clientRects = savedRange.getClientRects();
+          const firstRect = clientRects.length > 0 ? clientRects[0] : null;
+          if (firstRect && (firstRect.width > 0 || firstRect.height > 0)) {
+            anchorRect = firstRect;
+          } else {
+            // Anchor near the top of the editor instead of its bottom edge
+            const editorRect = editor.getBoundingClientRect();
+            anchorRect = new DOMRect(editorRect.left, editorRect.top, Math.min(editorRect.width, 440), 24);
+          }
         }
       } else {
-        anchorRect = editor.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+        anchorRect = new DOMRect(editorRect.left, editorRect.top, Math.min(editorRect.width, 440), 24);
       }
 
       // Target range for template insertion (must be valid inside editor)

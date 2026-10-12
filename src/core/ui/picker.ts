@@ -190,8 +190,12 @@ export function openPicker(opts: PickerOptions): { close(): void } {
   }
 
   let top = rect.bottom + 6;
-  if (top + estimatedHeight > viewportHeight - 16 && rect.top > estimatedHeight) {
-    top = rect.top - estimatedHeight - 6;
+  if (top + estimatedHeight > viewportHeight - 16) {
+    if (rect.top - estimatedHeight - 6 >= 16) {
+      top = rect.top - estimatedHeight - 6;
+    } else {
+      top = Math.max(16, viewportHeight - estimatedHeight - 16);
+    }
   }
   if (top < 16) {
     top = 16;
@@ -199,6 +203,20 @@ export function openPicker(opts: PickerOptions): { close(): void } {
 
   card.style.left = `${Math.round(left)}px`;
   card.style.top = `${Math.round(top)}px`;
+
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => {
+      if (isClosed || !card.isConnected) return;
+      const actualHeight = card.offsetHeight;
+      if (actualHeight > 0) {
+        const currentTop = parseFloat(card.style.top) || top;
+        if (currentTop + actualHeight > window.innerHeight - 16) {
+          const clampedTop = Math.max(16, window.innerHeight - actualHeight - 16);
+          card.style.top = `${Math.round(clampedTop)}px`;
+        }
+      }
+    });
+  }
 
   // State management
   let filteredTemplates = filterAndSortTemplates(opts.templates, '');
