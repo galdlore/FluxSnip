@@ -272,4 +272,29 @@ describe('inserter insertContent', () => {
     expect(pastedHtml).toBe('<div>Inserted <strong>bold</strong></div>');
     expect(pastedPlain).toBe('Inserted *bold*');
   });
+
+  it('ensures target editor is focused and selection is within editor during insertText', async () => {
+    // Create an external element and focus it
+    const external = document.createElement('div');
+    external.contentEditable = 'true';
+    external.id = 'external';
+    document.body.appendChild(external);
+    external.focus();
+
+    expect(document.activeElement).toBe(external);
+
+    document.execCommand = vi.fn((cmd: string, showUI: boolean, val?: string) => {
+      if (cmd === 'insertText' && val) {
+        editor.textContent = val;
+        return true;
+      }
+      return false;
+    });
+
+    const result = await insertContent(editor, mockContent, ['insertText'], false, true);
+    expect(result.ok).toBe(true);
+    expect(result.method).toBe('insertText');
+    expect(document.activeElement).toBe(editor);
+    expect(editor.textContent).toBe('Inserted bold');
+  });
 });

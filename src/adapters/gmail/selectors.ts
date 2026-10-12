@@ -24,7 +24,10 @@ export const SEL = {
    */
   aiPromptBox: [
     'div[contenteditable="true"][aria-label*="メールの内容を説明してください"]',
+    'div[contenteditable="true"][aria-label*="変更内容を記述"]',
     'div[contenteditable="true"][aria-label*="Help me write"]',
+    'div[contenteditable="true"][aria-label*="Describe what you want"]',
+    'div[contenteditable="true"][aria-label*="Describe the change"]',
     'div.Pv5YRd.TIYGAd[contenteditable="true"]',
     'div[enterkeyhint="send"][role="textbox"][contenteditable="true"]',
     'div[jsname="ZeIRi"][contenteditable="true"]',
@@ -40,13 +43,33 @@ export const SEL = {
   ],
 
   /**
-   * Gemini prompt submission button (作成 / Create).
+   * Active formatting toolbar toggle button or menu that blocks Gemini panel.
+   */
+  formatToolbarToggleActive: [
+    '[data-tooltip*="書式"] [aria-expanded="true"]',
+    '[data-tooltip*="書式"] [aria-pressed="true"]',
+    '[aria-label*="書式"] [aria-expanded="true"]',
+    '[aria-label*="書式"] [aria-pressed="true"]',
+    '[data-tooltip*="Format"] [aria-expanded="true"]',
+    '[data-tooltip*="Format"] [aria-pressed="true"]',
+    '[aria-label*="Format"] [aria-expanded="true"]',
+    '[aria-label*="Format"] [aria-pressed="true"]',
+    'div.J-Z-I.J-Z-I-KO[aria-expanded="true"]',
+    'div.J-Z-I.J-Z-I-KO[aria-pressed="true"]',
+  ],
+
+  /**
+   * Gemini prompt submission button (作成 / Create / 送信 / Send).
    */
   aiSubmitBtn: [
     'button[aria-label*="作成"]',
     'button[aria-label*="Create"]',
+    'button[aria-label*="送信"]',
+    'button[aria-label*="Send"]',
     'div[role="button"][aria-label*="作成"]',
     'div[role="button"][aria-label*="Create"]',
+    'div[role="button"][aria-label*="送信"]',
+    'div[role="button"][aria-label*="Send"]',
     'button[type="submit"]',
   ],
 

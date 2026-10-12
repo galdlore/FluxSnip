@@ -162,29 +162,74 @@ export const gmailAdapter: PlatformAdapter = {
     if (gt.aiPrompt && gt.aiPrompt.trim().length > 0) {
       const root = findComposeRoot(editor);
       if (root) {
+        // If formatting options toolbar or popup is active, dismiss it first
+        const formatToggle = q<HTMLElement>(root, SEL.formatToolbarToggleActive);
+        if (formatToggle) {
+          formatToggle.click();
+          await sleep(100);
+        }
+
         const sdtBtn = q<HTMLElement>(root, SEL.aiHelpBtn);
         if (sdtBtn) {
           sdtBtn.click();
-          const promptBox = await waitFor(
+        }
+
+        let promptBox = await waitFor(
+          () => {
+            const el = q<HTMLElement>(root, SEL.aiPromptBox);
+            return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
+          },
+          { timeout: 3000, interval: 50 }
+        );
+
+        // Fallback: if panel didn't open from click, send synthetic Alt+H to the editor
+        if (!promptBox) {
+          editor.dispatchEvent(
+            new KeyboardEvent('keydown', {
+              key: 'h',
+              code: 'KeyH',
+              altKey: true,
+              bubbles: true,
+              cancelable: true,
+            })
+          );
+          promptBox = await waitFor(
             () => {
               const el = q<HTMLElement>(root, SEL.aiPromptBox);
               return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
             },
             { timeout: 1500, interval: 50 }
           );
+        }
 
-          if (promptBox) {
-            const aiTpl: Template = {
-              ...template,
-              bodyAst: [{ t: 'p', c: [{ t: '#text', v: gt.aiPrompt }] }],
-            };
-            const aiRendered = renderTemplate(aiTpl, vars);
-            await insertContent(promptBox, aiRendered, ['insertText', 'paste'], false, true);
-
-            if (gt.autoSubmitAi) {
-              await sleep(150);
-              triggerAiSubmit(promptBox);
+        if (promptBox) {
+          // Strictly focus promptBox and position selection inside it to prevent leaking to mail body
+          try {
+            promptBox.focus();
+            const doc = promptBox.ownerDocument || document;
+            const win = doc.defaultView || window;
+            const sel = win.getSelection();
+            if (sel) {
+              const r = doc.createRange();
+              r.selectNodeContents(promptBox);
+              r.collapse(false);
+              sel.removeAllRanges();
+              sel.addRange(r);
             }
+          } catch {
+            // Ignore selection setup error
+          }
+
+          const aiTpl: Template = {
+            ...template,
+            bodyAst: [{ t: 'p', c: [{ t: '#text', v: gt.aiPrompt }] }],
+          };
+          const aiRendered = renderTemplate(aiTpl, vars);
+          await insertContent(promptBox, aiRendered, ['insertText', 'paste'], false, true);
+
+          if (gt.autoSubmitAi) {
+            await sleep(200);
+            triggerAiSubmit(promptBox);
           }
         }
       }

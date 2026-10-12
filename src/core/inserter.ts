@@ -290,6 +290,27 @@ export async function insertContent(
       }
 
       if (method === 'insertText') {
+        if (typeof doc.execCommand !== 'function') {
+          continue;
+        }
+
+        // Ensure editor is focused and browser selection is inside editor before execCommand
+        try {
+          if (doc.activeElement !== editor && !editor.contains(doc.activeElement)) {
+            editor.focus();
+          }
+          const sel = win.getSelection();
+          if (sel && (sel.rangeCount === 0 || !editor.contains(sel.anchorNode))) {
+            const range = doc.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        } catch {
+          // Ignore focus/selection setup fallback error
+        }
+
         const beforeText = editor.innerText || editor.textContent || '';
         let success = false;
 

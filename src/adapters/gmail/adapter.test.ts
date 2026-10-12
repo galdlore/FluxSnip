@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { gmailAdapter } from './adapter';
 import { findComposeRoot, findGmailBody } from './compose';
 import { simulatePeopleKit } from './__fixtures__/peoplekit-sim';
@@ -318,6 +318,126 @@ describe('gmail adapter and compose detection', () => {
       await gmailAdapter.afterInsert?.(aiPromptBox, templateManual, { now: new Date(), locale: 'ja' });
 
       expect(enterDispatched).toBe(false);
+    });
+
+    it('detects Gemini prompt box with aria-label="変更内容を記述します"', () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('enterkeyhint', 'send');
+      aiPromptBox.setAttribute('aria-label', '変更内容を記述します');
+      aiPromptBox.setAttribute('jsname', 'ZeIRi');
+      aiPromptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      dialog.appendChild(aiPromptBox);
+
+      expect(gmailAdapter.findEditor(aiPromptBox)).toBe(aiPromptBox);
+      expect(gmailAdapter.isPlainEditor?.(aiPromptBox)).toBe(true);
+    });
+
+    it('afterInsert dismisses active formatting toolbar and populates promptBox without leaking to body', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const bodyEl = document.querySelector('div.editable') as HTMLElement;
+
+      // Mock active formatting toolbar toggle
+      const formatToggle = document.createElement('div');
+      formatToggle.className = 'J-Z-I J-J5-Ji J-Z-I-KO';
+      formatToggle.setAttribute('role', 'button');
+      formatToggle.setAttribute('aria-expanded', 'true');
+      formatToggle.setAttribute('data-tooltip', '書式設定オプション');
+      let formatDismissed = false;
+      formatToggle.addEventListener('click', () => {
+        formatDismissed = true;
+        formatToggle.setAttribute('aria-expanded', 'false');
+      });
+      dialog.appendChild(formatToggle);
+
+      // Mock Gemini trigger button (sdt)
+      const sdtBtn = document.createElement('div');
+      sdtBtn.setAttribute('command', 'sdt');
+      let sdtClicked = false;
+      sdtBtn.addEventListener('click', () => {
+        sdtClicked = true;
+        // Panel appears asynchronously
+        const promptBox = document.createElement('div');
+        promptBox.setAttribute('contenteditable', 'true');
+        promptBox.setAttribute('role', 'textbox');
+        promptBox.setAttribute('aria-label', '変更内容を記述します');
+        promptBox.className = 'Pv5YRd TIYGAd UNQklc';
+        dialog.appendChild(promptBox);
+      });
+      dialog.appendChild(sdtBtn);
+
+      const templateWithAi: any = {
+        id: 'tpl-ai-after',
+        platform: 'gmail',
+        name: 'AI Template',
+        keyword: ';aia',
+        tags: [],
+        bodyHtml: '<p>Regular body</p>',
+        bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'Regular body' }] }],
+        aiPrompt: 'Please review and improve tone',
+        createdAt: 100,
+        updatedAt: 100,
+      };
+
+      document.execCommand = vi.fn((cmd: string, showUI: boolean, val?: string) => {
+        if (cmd === 'insertText' && val) {
+          const active = document.activeElement as HTMLElement;
+          if (active) active.textContent = val;
+          return true;
+        }
+        return false;
+      });
+
+      await gmailAdapter.afterInsert?.(bodyEl, templateWithAi, { now: new Date(), locale: 'ja' });
+
+      expect(formatDismissed).toBe(true);
+      expect(sdtClicked).toBe(true);
+
+      const createdPromptBox = dialog.querySelector('div[aria-label="変更内容を記述します"]') as HTMLElement;
+      expect(createdPromptBox).not.toBeNull();
+      expect(document.activeElement).toBe(createdPromptBox);
+      expect(createdPromptBox.textContent).toBe('Please review and improve tone');
+    });
+
+    it('afterInsert clicks submit button with aria-label="送信" when autoSubmitAi is true', async () => {
+      const dialog = document.querySelector('div[role="dialog"]') as HTMLElement;
+      const container = document.createElement('div');
+      container.className = 'idpN8c';
+
+      const aiPromptBox = document.createElement('div');
+      aiPromptBox.setAttribute('contenteditable', 'true');
+      aiPromptBox.setAttribute('role', 'textbox');
+      aiPromptBox.setAttribute('aria-label', '変更内容を記述します');
+      aiPromptBox.className = 'Pv5YRd TIYGAd UNQklc';
+      container.appendChild(aiPromptBox);
+
+      const sendBtn = document.createElement('button');
+      sendBtn.setAttribute('aria-label', '送信');
+      let sendClicked = false;
+      sendBtn.addEventListener('click', () => {
+        sendClicked = true;
+      });
+      container.appendChild(sendBtn);
+      dialog.appendChild(container);
+
+      const templateAuto: any = {
+        id: 'tpl-ai-send',
+        platform: 'gmail',
+        name: 'AI Prompt Send',
+        keyword: ';ais',
+        tags: [],
+        bodyHtml: '',
+        bodyAst: [],
+        createdAt: 100,
+        updatedAt: 100,
+        autoSubmitAi: true,
+      };
+
+      await gmailAdapter.afterInsert?.(aiPromptBox, templateAuto, { now: new Date(), locale: 'ja' });
+
+      expect(sendClicked).toBe(true);
     });
   });
 });
