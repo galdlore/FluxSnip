@@ -1,5 +1,7 @@
 # FluxSnip
 
+[English](README.md) | [日本語](README.ja.md)
+
 Keyword-triggered templates for Gmail, Microsoft Teams（web or PWA）, and Google Chat（web or PWA）. Type a short keyword and press Tab, or open a search picker, and FluxSnip inserts the template at the caret.
 
 Templates are stored in this browser only. The extension does not upload them.

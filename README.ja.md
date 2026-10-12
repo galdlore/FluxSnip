@@ -1,5 +1,7 @@
 # FluxSnip
 
+[English](README.md) | [日本語](README.ja.md)
+
 Gmail、Microsoft Teams（webかPWA版）、Google Chat（webかPWA版） 向けの定型文拡張機能です。短いキーワードを入力して Tab を押すか、検索ピッカーから選ぶと、カーソル位置に定型文が入ります。
 
 定型文はこのブラウザの中だけに保存されます。拡張機能がそれを送信することはありません。
