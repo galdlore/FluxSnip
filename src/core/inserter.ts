@@ -345,6 +345,38 @@ export async function insertContent(
         if (success && beforeText !== afterText) {
           return { ok: true, method: 'insertText' };
         }
+
+        // Direct plain-text DOM insertion fallback for contenteditable prompt boxes (e.g. Gemini)
+        // when execCommand('insertText') is prevented or leaves text unchanged
+        if (isPlain) {
+          const sel = win.getSelection();
+          let range: Range | null = null;
+          if (sel && sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+            range = sel.getRangeAt(0);
+          } else {
+            range = doc.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);
+          }
+
+          range.deleteContents();
+          const textNode = doc.createTextNode(plainText);
+          range.insertNode(textNode);
+          range.setStartAfter(textNode);
+          range.collapse(true);
+
+          if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+
+          if (cursorOffset !== null && cursorOffset >= 0) {
+            setCaretPosition(editor, cursorOffset);
+          }
+
+          dispatchInput(editor, 'insertText');
+          return { ok: true, method: 'insertText' };
+        }
       }
 
       if (method === 'clipboard') {

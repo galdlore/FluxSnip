@@ -297,4 +297,20 @@ describe('inserter insertContent', () => {
     expect(document.activeElement).toBe(editor);
     expect(editor.textContent).toBe('Inserted bold');
   });
+
+  it('falls back to direct DOM insertion and dispatches input event during insertText when execCommand does not modify text', async () => {
+    let inputFired = false;
+    editor.addEventListener('input', () => {
+      inputFired = true;
+    });
+
+    // Mock execCommand to do nothing (returning false or leaving text unmodified)
+    document.execCommand = vi.fn(() => false);
+
+    const result = await insertContent(editor, mockContent, ['insertText'], false, true);
+    expect(result.ok).toBe(true);
+    expect(result.method).toBe('insertText');
+    expect(editor.textContent).toContain('Inserted bold');
+    expect(inputFired).toBe(true);
+  });
 });

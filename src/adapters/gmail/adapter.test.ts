@@ -198,7 +198,7 @@ describe('gmail adapter and compose detection', () => {
 
       // Check isPlainEditor & getInsertOrder
       expect(gmailAdapter.isPlainEditor?.(aiPromptBox)).toBe(true);
-      expect(gmailAdapter.getInsertOrder?.(aiPromptBox)).toEqual(['insertText', 'paste', 'clipboard']);
+      expect(gmailAdapter.getInsertOrder?.(aiPromptBox)).toEqual(['insertText', 'dom', 'paste', 'clipboard']);
     });
 
     it('afterInsert clicks the submit button only (no extra Enter) when autoSubmitAi is true', async () => {

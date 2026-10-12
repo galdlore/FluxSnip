@@ -136,7 +136,7 @@ export const gmailAdapter: PlatformAdapter = {
 
   getInsertOrder(editor: HTMLElement): InsertMethod[] {
     if (isAiPromptBox(editor)) {
-      return ['insertText', 'paste', 'clipboard'];
+      return ['insertText', 'dom', 'paste', 'clipboard'];
     }
     // 'html' first so Ctrl+Z undoes an expansion; 'dom' bypasses the undo history
     return ['html', 'dom', 'paste', 'clipboard'];
@@ -215,6 +215,7 @@ export const gmailAdapter: PlatformAdapter = {
         }
 
         if (promptBox) {
+          await sleep(80);
           // Strictly focus promptBox and position selection inside it to prevent leaking to mail body
           try {
             promptBox.focus();
@@ -237,7 +238,7 @@ export const gmailAdapter: PlatformAdapter = {
             bodyAst: [{ t: 'p', c: [{ t: '#text', v: gt.aiPrompt }] }],
           };
           const aiRendered = renderTemplate(aiTpl, vars);
-          await insertContent(promptBox, aiRendered, ['insertText', 'paste'], false, true);
+          await insertContent(promptBox, aiRendered, ['insertText', 'dom', 'paste'], false, true);
 
           if (gt.autoSubmitAi) {
             await sleep(200);
