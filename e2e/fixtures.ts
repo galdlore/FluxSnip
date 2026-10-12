@@ -13,6 +13,8 @@ export interface E2eTemplate {
   to?: { mode: 'replace' | 'append'; emails: string[] };
   cc?: { mode: 'replace' | 'append'; emails: string[] };
   subject?: { mode: 'replace' | 'ifEmpty'; value: string };
+  aiPrompt?: string;
+  autoSubmitAi?: boolean;
 }
 
 function toStoredTemplate(t: E2eTemplate, i: number) {
@@ -30,6 +32,8 @@ function toStoredTemplate(t: E2eTemplate, i: number) {
     ...(t.to ? { to: t.to } : {}),
     ...(t.cc ? { cc: t.cc } : {}),
     ...(t.subject ? { subject: t.subject } : {}),
+    ...(t.aiPrompt ? { aiPrompt: t.aiPrompt } : {}),
+    ...(t.autoSubmitAi !== undefined ? { autoSubmitAi: t.autoSubmitAi } : {}),
   };
 }
 
@@ -38,6 +42,10 @@ export interface Compose {
   dialog: Locator;
   body: Locator;
   subject: Locator;
+  aiPromptBox: Locator;
+  aiHelpBtn: Locator;
+  /** Returns true if Gemini (Help me write) is enabled and available in this Gmail compose window. */
+  hasGemini(): Promise<boolean>;
   /** Replaces every Gmail template in the extension's storage. */
   setTemplates(list: E2eTemplate[]): Promise<void>;
   /** Types a keyword at the end of the body and presses Tab. */
@@ -89,7 +97,10 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
     const page = await ext.context.newPage();
     page.on('console', (msg) => {
-      if (msg.text().includes('[FluxSnip]')) console.log(`  [page ${msg.type()}] ${msg.text()}`);
+      console.log(`  [page ${msg.type()}] ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+      console.log(`  [pageerror] ${err.message}`);
     });
     await page.goto('https://mail.google.com/mail/u/0/#inbox?compose=new');
     if (page.url().includes('accounts.google.com')) {
@@ -105,16 +116,37 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const body = dialog.locator('div[contenteditable="true"][g_editable="true"]').first();
     await body.waitFor();
 
+    const aiPromptBox = dialog
+      .locator(
+        'div[contenteditable="true"][aria-label*="メールの内容を説明してください"], ' +
+          'div[contenteditable="true"][aria-label*="変更内容を記述"], ' +
+          'div[contenteditable="true"][aria-label*="Help me write"], ' +
+          'div.Pv5YRd.TIYGAd[contenteditable="true"], ' +
+          'div[jsname="ZeIRi"][contenteditable="true"]'
+      )
+      .first();
+
+    const aiHelpBtn = dialog
+      .locator('[command="sdt"], [data-tooltip*="Alt+H"], [aria-label*="Alt+H"]')
+      .first();
+
     const compose: Compose = {
       page,
       dialog,
       body,
       subject,
+      aiPromptBox,
+      aiHelpBtn,
+      async hasGemini() {
+        return (await aiHelpBtn.count()) > 0 && (await aiHelpBtn.isVisible().catch(() => false));
+      },
       setTemplates,
       async expand(keyword) {
         await body.click();
+        await page.waitForTimeout(150);
         await page.keyboard.press('Control+End');
         await page.keyboard.type(keyword);
+        await page.waitForTimeout(50);
         await page.keyboard.press('Tab');
       },
       async chipEmails() {

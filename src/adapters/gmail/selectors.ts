@@ -46,14 +46,14 @@ export const SEL = {
    * Active formatting toolbar toggle button or menu that blocks Gemini panel.
    */
   formatToolbarToggleActive: [
-    '[data-tooltip*="書式"] [aria-expanded="true"]',
-    '[data-tooltip*="書式"] [aria-pressed="true"]',
-    '[aria-label*="書式"] [aria-expanded="true"]',
-    '[aria-label*="書式"] [aria-pressed="true"]',
-    '[data-tooltip*="Format"] [aria-expanded="true"]',
-    '[data-tooltip*="Format"] [aria-pressed="true"]',
-    '[aria-label*="Format"] [aria-expanded="true"]',
-    '[aria-label*="Format"] [aria-pressed="true"]',
+    '[data-tooltip*="書式"][aria-expanded="true"]',
+    '[data-tooltip*="書式"][aria-pressed="true"]',
+    '[aria-label*="書式"][aria-expanded="true"]',
+    '[aria-label*="書式"][aria-pressed="true"]',
+    '[data-tooltip*="Format"][aria-expanded="true"]',
+    '[data-tooltip*="Format"][aria-pressed="true"]',
+    '[aria-label*="Format"][aria-expanded="true"]',
+    '[aria-label*="Format"][aria-pressed="true"]',
     'div.J-Z-I.J-Z-I-KO[aria-expanded="true"]',
     'div.J-Z-I.J-Z-I-KO[aria-pressed="true"]',
   ],

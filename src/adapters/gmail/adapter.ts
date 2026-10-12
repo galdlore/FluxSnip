@@ -15,6 +15,25 @@ import { applySubject } from './subject';
  * Platform adapter for Gmail web interface (mail.google.com).
  * Handles editor resolution, body insertion, To/Cc/Bcc, subject, and From alias management.
  */
+function clickGmailButton(el: HTMLElement) {
+  const doc = el.ownerDocument || document;
+  const win = doc.defaultView || window;
+  const opts: MouseEventInit = { bubbles: true, cancelable: true, view: win, buttons: 1 };
+  try {
+    el.dispatchEvent(new win.PointerEvent('pointerdown', opts));
+  } catch {
+    // Ignore PointerEvent fallback
+  }
+  el.dispatchEvent(new win.MouseEvent('mousedown', opts));
+  try {
+    el.dispatchEvent(new win.PointerEvent('pointerup', opts));
+  } catch {
+    // Ignore
+  }
+  el.dispatchEvent(new win.MouseEvent('mouseup', opts));
+  el.click();
+}
+
 export const gmailAdapter: PlatformAdapter = {
   platform: 'gmail',
 
@@ -160,23 +179,32 @@ export const gmailAdapter: PlatformAdapter = {
     // When expanded in regular compose body and template defines aiPrompt:
     // Open Gemini Alt+H panel and populate the prompt
     if (gt.aiPrompt && gt.aiPrompt.trim().length > 0) {
+      await sleep(150);
       const root = findComposeRoot(editor);
+      const dialogEl = root?.closest<HTMLElement>('div[role="dialog"], div[role="region"]') || root;
       if (root) {
         // If formatting options toolbar or popup is active, dismiss it first
-        const formatToggle = q<HTMLElement>(root, SEL.formatToolbarToggleActive);
+        const formatToggle =
+          q<HTMLElement>(root, SEL.formatToolbarToggleActive) ||
+          (dialogEl ? q<HTMLElement>(dialogEl, SEL.formatToolbarToggleActive) : null);
         if (formatToggle) {
-          formatToggle.click();
-          await sleep(100);
+          clickGmailButton(formatToggle);
+          await sleep(250);
         }
 
-        const sdtBtn = q<HTMLElement>(root, SEL.aiHelpBtn);
+        let sdtBtn = q<HTMLElement>(root, SEL.aiHelpBtn);
+        if (!sdtBtn && dialogEl) {
+          sdtBtn = q<HTMLElement>(dialogEl, SEL.aiHelpBtn);
+        }
         if (sdtBtn) {
-          sdtBtn.click();
+          clickGmailButton(sdtBtn);
         }
 
         let promptBox = await waitFor(
           () => {
-            const el = q<HTMLElement>(root, SEL.aiPromptBox);
+            const el =
+              q<HTMLElement>(root, SEL.aiPromptBox) ||
+              (dialogEl ? q<HTMLElement>(dialogEl, SEL.aiPromptBox) : null);
             return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
           },
           { timeout: 3000, interval: 50 }
@@ -186,7 +214,6 @@ export const gmailAdapter: PlatformAdapter = {
         if (!promptBox) {
           const isBlank = (editor.textContent?.trim() || '').length === 0;
           if (isBlank) {
-            // In a blank compose body, pressing '/' opens the Help me write prompt box
             try {
               editor.focus();
             } catch {
@@ -201,13 +228,14 @@ export const gmailAdapter: PlatformAdapter = {
               })
             );
           } else if (sdtBtn) {
-            // In non-blank body, re-click sdtBtn (avoid Alt+H as it triggers automatic proofreading)
-            sdtBtn.click();
+            clickGmailButton(sdtBtn);
           }
 
           promptBox = await waitFor(
             () => {
-              const el = q<HTMLElement>(root, SEL.aiPromptBox);
+              const el =
+                q<HTMLElement>(root, SEL.aiPromptBox) ||
+                (dialogEl ? q<HTMLElement>(dialogEl, SEL.aiPromptBox) : null);
               return el && (el.isContentEditable || el.getAttribute('contenteditable') === 'true') ? el : null;
             },
             { timeout: 1500, interval: 50 }

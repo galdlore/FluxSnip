@@ -12,6 +12,7 @@ export default defineConfig({
   reporter: [['list']],
   outputDir: '../test-results',
   use: {
+    headless: false,
     // Without this, a missing Gmail element blocks until the 90s test timeout
     actionTimeout: 15_000,
     trace: 'retain-on-failure',
