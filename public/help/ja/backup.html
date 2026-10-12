@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>バックアップ — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/backup.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html">概要</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">設定</a>
+        <a href="backup.html" aria-current="page">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>バックアップ</h1>
+        <p class="lede">定型文と設定はこの端末に残ります。別のパソコンへ移すときは JSON ファイルを使います。FluxSnip が自分でアップロードすることはありません。</p>
+
+        <h2>書き出す</h2>
+        <p><strong>すべてエクスポート</strong>、または Gmail・Teams・Chat のどれかだけを書き出します。「すべて」のファイル名は <code>fluxsnip-backup-YYYYMMDD-HHmm.json</code> です。1 つのサービスだけを書き出すと、ファイル名にその名前が入ります（例: <code>fluxsnip-backup-gmail-YYYYMMDD-HHmm.json</code>）。そのファイルでは他のサービスは空です。設定（ピッカーのショートカットや言語など）が入るのは「すべてエクスポート」だけです。</p>
+
+        <h2>読み込む</h2>
+        <ol>
+          <li>FluxSnip の JSON ファイルを選びます。プレビューに件数と、スキップされる行の理由が出ます。</li>
+          <li>モードを選びます。
+            <ul>
+              <li><strong>統合</strong>は、id が新しい定型文を追加します。同じ id があるときは、更新日時が新しい方を残します。別の定型文がすでに同じキーワードを使っている場合はスキップします。</li>
+              <li><strong>置換</strong>は、ファイルに含まれるサービスの定型文を消し、ファイルの内容に入れ替えます。その前に、いまの内容をバックアップとしてダウンロードします。そのダウンロードに失敗したときは、置換を中止します。</li>
+            </ul>
+          </li>
+          <li>ファイルに設定が入っていて、このブラウザでもそれを使うときは<strong>拡張機能の設定も取り込む</strong>にチェックします。ショートカットや言語などを残したいときはオフのままにします。</li>
+          <li>実行します。追加、更新、スキップの件数が表示されます。</li>
+        </ol>
+
+        <h2>Google ドライブで別のパソコンへ渡す</h2>
+        <ol>
+          <li>このパソコンで書き出し、JSON ファイルをパソコン版 Google ドライブのフォルダに保存します。拡張機能の中からアップロードするのではありません。</li>
+          <li>もう一方のパソコンでファイルの同期を待ち、FluxSnip の設定画面から読み込みます。</li>
+          <li>そのパソコンにしか無い定型文を消さず、新しい編集だけ取り込みたいときは<strong>統合</strong>を使います。</li>
+        </ol>
+        <p class="note">自動では同期しません。<code>https:</code> で始まる画像は、メッセージを表示するときにそのアドレスから読み込まれます。Gmail の「Gemini へ自動送信」をオンにしていると、Gemini 欄で展開したときにそのプロンプトが Google に送られます。</p>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。</p>
+  </body>
+</html>

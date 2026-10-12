@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>概要 — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/index.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html" aria-current="page">概要</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">設定</a>
+        <a href="backup.html">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>概要</h1>
+        <p class="lede">FluxSnip は、自分で書いた定型文を Gmail、Microsoft Teams、Google Chat に挿入します。</p>
+
+        <h2>設定画面を開く</h2>
+        <p>Chrome の FluxSnip アイコンをクリックします。定型文、設定、バックアップはこの画面にあります。右上の<strong>ヘルプ</strong>は、いま開いているタブの使い方を表示します。</p>
+
+        <h2>定型文を挿入する</h2>
+        <ol>
+          <li>メッセージ欄にキーワードを入力して <kbd>Tab</kbd> を押します。キーワードが一致したときだけ Tab を横取りします。一致しなければ、通常どおりフォーカスが移動します。IME で変換中の Tab は横取りしません。</li>
+          <li>またはピッカーのショートカット（初期値は <kbd>Alt</kbd>+<kbd>J</kbd>）を押し、検索して <kbd>Enter</kbd> で挿入します。<kbd>↑</kbd> と <kbd>↓</kbd> で選択を移動し、<kbd>Esc</kbd> で閉じます。</li>
+        </ol>
+        <p>キーワードは大文字と小文字を区別します。1〜32 文字で、使える文字は英数字と <code>_ - ; : . ! / @ #</code> です。<code>;thx</code> のように先頭に <code>;</code> を付けると、普通の単語とぶつかりにくくなります。</p>
+
+        <h2>定型文はサービスごとに別です</h2>
+        <p>Gmail タブに保存した定型文は、Teams や Chat では出ません。使うサービスのタブで作成してください。</p>
+        <ul>
+          <li><a href="gmail.html">Gmail</a> — 本文、To/Cc/Bcc、件名、差出人、任意の Gemini プロンプト</li>
+          <li><a href="teams.html">Teams</a> — メッセージ本文（表を含む）</li>
+          <li><a href="chat.html">Google Chat</a> — Chat の書式に変換した本文</li>
+          <li><a href="settings.html">設定</a> — 言語、ショートカット、有効・無効</li>
+          <li><a href="backup.html">バックアップ</a> — 書き出しと読み込み</li>
+        </ul>
+
+        <h2>定型文の編集</h2>
+        <ul>
+          <li><strong>+ 新規作成</strong>は下書きです。保存するまで一覧には入りません。</li>
+          <li>保存ボタン、または <kbd>Ctrl</kbd>+<kbd>S</kbd>（macOS は <kbd>⌘</kbd>+<kbd>S</kbd>）で保存します。</li>
+          <li>本文は<strong>ビジュアル</strong>、<strong>HTML</strong>、<strong>プレビュー</strong>を切り替えられます。Excel や Word から表を貼り付けられます。</li>
+          <li>保存時に、スクリプトなどの危険な記述は取り除かれます。</li>
+          <li>未保存の編集があるときに別の定型文やタブへ移ると、破棄の確認が出ます。</li>
+          <li>複製は名前にコピーである印を付け、キーワードを空にします。新しいキーワードを付けて保存してください。</li>
+          <li>同じキーワードの定型文が複数あると、一覧に警告が出ます。Tab で展開されるのは、更新日時が新しい方です。</li>
+        </ul>
+
+        <h2>言語</h2>
+        <p><a href="settings.html">設定</a>で「ブラウザに合わせる」「English」「日本語」を選びます。選んだ値はこの端末に保存され、設定画面、Gmail・Teams・Chat 上のメッセージ、このヘルプに使われます。「ブラウザに合わせる」は Chrome の言語に従います。Chrome の言語が日本語以外のときは、ヘルプは英語で開きます。</p>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。定型文はこのブラウザの中だけに保存されます。</p>
+  </body>
+</html>

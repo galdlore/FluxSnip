@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teams — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/teams.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html">概要</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html" aria-current="page">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">設定</a>
+        <a href="backup.html">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>Microsoft Teams</h1>
+        <p class="lede">このタブの定型文は Teams だけで使います。Gmail や Google Chat とは共有しません。</p>
+        <p>作成、保存、検索の手順は<a href="index.html">概要</a>にあります。</p>
+
+        <h2>使える場所</h2>
+        <ul>
+          <li>会社の Teams。<code>teams.microsoft.com</code> と <code>teams.cloud.microsoft</code>。インストールした PWA ウィンドウも含みます</li>
+          <li>1 対 1、またはグループチャットの入力欄</li>
+          <li>チャネルの新規投稿と返信欄</li>
+        </ul>
+        <p>入力欄をクリックし、キーワードを入れて <kbd>Tab</kbd> を押します。ピッカー（初期値 <kbd>Alt</kbd>+<kbd>J</kbd>）から <kbd>Enter</kbd> で選んでも挿入できます。文字はカーソル位置に入ります。</p>
+
+        <h2>書式</h2>
+        <p>本文には太字、リスト、リンク、表を入れられます。Excel や Word から表を貼り付け、保存前に<strong>プレビュー</strong>で確認してください。Teams では表のあるメッセージとして表示されます。挿入後の元に戻す操作は、Teams 側のエディタに従います。</p>
+        <p>Teams の定型文に To、Cc、件名、差出人はありません。本文では <code>{{date}}</code>、<code>{{time}}</code>、<code>{{weekday}}</code> が使えます。<code>{{to.name}}</code> のような宛先の変数は Gmail 用です。</p>
+
+        <h2>挿入されないとき</h2>
+        <p><a href="settings.html">設定</a>で Teams が有効か、キーワードの大文字小文字まで一致しているかを確認してください。IME の変換中は Tab を無視します。Teams 上部の検索欄はメッセージ欄ではないので、そこではキーワードを展開しません。</p>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。</p>
+  </body>
+</html>

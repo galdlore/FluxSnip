@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teams — FluxSnip Help</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>Help</span></p>
+      <p class="lang-switch"><a href="../ja/teams.html" lang="ja" hreflang="ja">日本語</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Help pages">
+        <a href="index.html">Overview</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html" aria-current="page">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">Settings</a>
+        <a href="backup.html">Backup</a>
+      </nav>
+      <main id="content">
+        <h1>Microsoft Teams</h1>
+        <p class="lede">Templates on this tab are used only in Teams. They are not shared with Gmail or Google Chat.</p>
+        <p>How to create, save, and search templates is on the <a href="index.html">overview</a>.</p>
+
+        <h2>Where it works</h2>
+        <ul>
+          <li>Company Teams on <code>teams.microsoft.com</code> and <code>teams.cloud.microsoft</code>, including the installed PWA window</li>
+          <li>A 1:1 or group chat compose box</li>
+          <li>A channel’s new post and its reply box</li>
+        </ul>
+        <p>Click the message box, type the keyword, and press <kbd>Tab</kbd>. Or press the picker shortcut (default <kbd>Alt</kbd>+<kbd>J</kbd>) and choose a template with <kbd>Enter</kbd>. The text is inserted at the caret.</p>
+
+        <h2>Formatting</h2>
+        <p>The body can include bold, lists, links, and tables. Paste a table from Excel or Word, then check <strong>Preview</strong> before you save. Teams shows tables in the message. Undo after insert follows Teams’ own editor.</p>
+        <p>There are no To, Cc, subject, or From fields on a Teams template. Use <code>{{date}}</code>, <code>{{time}}</code>, and <code>{{weekday}}</code> in the body. Recipient variables such as <code>{{to.name}}</code> are for Gmail.</p>
+
+        <h2>If nothing is inserted</h2>
+        <p>Confirm Teams is enabled on <a href="settings.html">Settings</a>, and that the keyword matches exactly, including case. Tab is ignored while an IME is converting. The search box at the top of Teams is not a message box, so keywords there are left alone.</p>
+      </main>
+    </div>
+    <p class="page-footer">This page follows your system’s light or dark appearance.</p>
+  </body>
+</html>

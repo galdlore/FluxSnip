@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Backup — FluxSnip Help</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>Help</span></p>
+      <p class="lang-switch"><a href="../ja/backup.html" lang="ja" hreflang="ja">日本語</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Help pages">
+        <a href="index.html">Overview</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">Settings</a>
+        <a href="backup.html" aria-current="page">Backup</a>
+      </nav>
+      <main id="content">
+        <h1>Backup</h1>
+        <p class="lede">Templates and settings stay on this device. A JSON file is how you copy them to another computer. FluxSnip does not upload them.</p>
+
+        <h2>Export</h2>
+        <p>Choose <strong>Export All</strong>, or export only Gmail, Teams, or Chat. Export All is named <code>fluxsnip-backup-YYYYMMDD-HHmm.json</code>. A single-service file includes that service’s name, such as <code>fluxsnip-backup-gmail-YYYYMMDD-HHmm.json</code>, and leaves the other services empty. Only Export All includes settings, such as the picker shortcut and language.</p>
+
+        <h2>Import</h2>
+        <ol>
+          <li>Choose a FluxSnip JSON file. A preview lists how many templates it contains and any rows that will be skipped.</li>
+          <li>Pick a mode.
+            <ul>
+              <li><strong>Merge</strong> adds templates whose id is new. When the id already exists, the copy with the newer update time is kept. A template whose keyword is already used by a different template is skipped.</li>
+              <li><strong>Replace</strong> deletes the current templates for the services in the file and writes the file’s templates instead. FluxSnip first downloads a backup of what you have now. If that download fails, the replace is cancelled.</li>
+            </ul>
+          </li>
+          <li>Check <strong>Also import settings</strong> when the file contains settings and you want this browser to use them. Leave it off to keep the shortcut, language, and other settings you already have.</li>
+          <li>Run the import. The result shows how many templates were added, updated, or skipped.</li>
+        </ol>
+
+        <h2>Copying to another computer with Google Drive</h2>
+        <ol>
+          <li>Export on this computer and save the JSON file into your Google Drive folder (the desktop Drive folder, not an upload inside the extension).</li>
+          <li>On the other computer, wait until that file has synced, open FluxSnip options, and import it.</li>
+          <li>Use <strong>Merge</strong> when you want to fold in newer edits without wiping templates that exist only on that computer.</li>
+        </ol>
+        <p class="note">There is no automatic sync. Images whose address starts with <code>https:</code> are loaded from that address when a message is shown. With Gmail’s “automatically submit Gemini” option on, that prompt is sent to Google when you expand the template in the Gemini box.</p>
+      </main>
+    </div>
+    <p class="page-footer">This page follows your system’s light or dark appearance.</p>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="i18n-pending">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="manifest.open_in_tab" content="true" />
+    <title>FluxSnip</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <div class="header-brand">
+          <img src="/icon/32.png" alt="FluxSnip" class="brand-logo" width="28" height="28" />
+          <h1 class="brand-title">FluxSnip</h1>
+          <span class="brand-version">v0.1.0</span>
+        </div>
+        <div class="header-actions">
+          <nav class="app-nav" role="tablist" aria-label="FluxSnip">
+            <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="views-container" data-tab="gmail" id="tab-gmail" data-i18n="options_tab_gmail">Gmail</button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="views-container" data-tab="teams" id="tab-teams" data-i18n="options_tab_teams">Teams</button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="views-container" data-tab="chat" id="tab-chat" data-i18n="options_tab_chat">Google Chat</button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="views-container" data-tab="settings" id="tab-settings" data-i18n="options_tab_settings">Settings</button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="views-container" data-tab="backup" id="tab-backup" data-i18n="options_tab_backup">Backup</button>
+          </nav>
+          <button type="button" class="btn btn-outline header-help" id="open-help-btn" data-i18n="options_open_help">Help</button>
+        </div>
+      </header>
+      <main id="views-container" class="views-container" role="tabpanel" aria-labelledby="tab-gmail">
+        <!-- Rendered view injected dynamically -->
+      </main>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "fluxsnip",
+  "version": "0.1.0",
+  "description": "Keyword-triggered text templates for Gmail, Microsoft Teams and Google Chat.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e:login": "node e2e/login.mjs",
+    "e2e": "wxt build && playwright test -c e2e/playwright.config.ts",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^22.13.10",
+    "happy-dom": "^20.14.6",
+    "typescript": "^5.8.2",
+    "vitest": "^5.0.3",
+    "wxt": "^0.21.4"
+  }
+}

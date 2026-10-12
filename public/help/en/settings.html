@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings — FluxSnip Help</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>Help</span></p>
+      <p class="lang-switch"><a href="../ja/settings.html" lang="ja" hreflang="ja">日本語</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Help pages">
+        <a href="index.html">Overview</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html" aria-current="page">Settings</a>
+        <a href="backup.html">Backup</a>
+      </nav>
+      <main id="content">
+        <h1>Settings</h1>
+        <p class="lede">These choices are saved in this browser and applied as soon as you change them.</p>
+
+        <h2>Language</h2>
+        <ul>
+          <li><strong>Match browser</strong> — follow Chrome’s language. Help opens in Japanese when Chrome’s language starts with <code>ja</code>, and in English otherwise.</li>
+          <li><strong>English</strong> or <strong>日本語</strong> — use that language for the options page, for toasts and the picker inside Gmail, Teams, and Chat, and for Help.</li>
+        </ul>
+        <p>Changing the language reloads the options page so every label updates. The choice is included when a <a href="backup.html">backup</a> contains settings.</p>
+
+        <h2>Picker shortcut</h2>
+        <p><strong>Record Shortcut</strong> captures the next key combination and saves it. Modifier keys alone are ignored; press the full shortcut, such as <kbd>Alt</kbd>+<kbd>J</kbd>. <strong>Reset to Default</strong> restores <kbd>Alt</kbd>+<kbd>J</kbd>. Avoid shortcuts your IME already uses, such as <kbd>Ctrl</kbd>+<kbd>Space</kbd>.</p>
+
+        <h2>Enabled platforms</h2>
+        <p>Turn a service off to stop keyword expansion and the picker there. Your templates stay stored. Turn it back on when you want them again.</p>
+
+        <h2>Gmail field wait time</h2>
+        <p>This is how long FluxSnip waits for Gmail to add or remove a recipient chip, or to reveal Cc and Bcc. You can set 20–600 ms. If Gmail answers after that but within 600 ms, the step still succeeds and the saved wait is raised automatically so the next run starts with more room.</p>
+
+        <h2>Discovered Gmail sender aliases</h2>
+        <p>Addresses FluxSnip has seen in the Gmail From menu are listed here and offered when you edit a Gmail template’s From field. Removing one only clears the suggestion. It does not delete the alias in Gmail.</p>
+      </main>
+    </div>
+    <p class="page-footer">This page follows your system’s light or dark appearance.</p>
+  </body>
+</html>

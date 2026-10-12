@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gmail — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/gmail.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html">概要</a>
+        <a href="gmail.html" aria-current="page">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">設定</a>
+        <a href="backup.html">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>Gmail</h1>
+        <p class="lede"><code>mail.google.com</code> の作成画面に挿入する定型文を、このタブで作ります。</p>
+        <p>保存、複製、検索、ビジュアル編集の共通手順は<a href="index.html">概要</a>にあります。</p>
+
+        <h2>挿入する</h2>
+        <p>本文、件名、宛先欄のいずれかにカーソルを置きます。キーワードを入力して <kbd>Tab</kbd> を押すか、ピッカー（初期値 <kbd>Alt</kbd>+<kbd>J</kbd>）から <kbd>Enter</kbd> で選びます。本文はカーソル位置に入るので、下にある署名や引用は残ります。</p>
+        <p>Gmail では、展開の直後に <kbd>Ctrl</kbd>+<kbd>Z</kbd> でキーワードへ戻せます。<kbd>Ctrl</kbd>+<kbd>Y</kbd> でやり直します。</p>
+
+        <h2>宛先・件名・差出人</h2>
+        <p>変えたくない項目は空のままにしてください。</p>
+        <table>
+          <thead>
+            <tr><th>項目</th><th>動き</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>差出人</td><td>送信元のエイリアスを選びます。Gmail の「名前を付けて送信」に登録済みのアドレスだけ有効です。</td></tr>
+            <tr><td>To、Cc、Bcc</td><td>1 行に 1 アドレス、またはカンマ区切りです。<strong>置換</strong>はその欄を消してから入れます。<strong>追記</strong>は足します。</td></tr>
+            <tr><td>件名</td><td><strong>置換</strong>は件名を上書きします。<strong>空のときのみ</strong>は、件名が空のときだけ書き込みます。</td></tr>
+          </tbody>
+        </table>
+        <p class="note">To、Cc、Bcc、差出人、件名は、Gmail 本体の表示言語が日本語または英語のときに認識します。それ以外の言語でも本文の展開はできます。宛先や件名を設定できなかったときは、画面上に警告が出ます。</p>
+
+        <h2>Gemini プロンプト</h2>
+        <p><strong>Gemini 指示テキスト (Alt+H)</strong>は、Gmail の Gemini 欄に入れる文章です。<code>{{cursor}}</code> の位置にカーソルが来ます。<strong>Gemini プロンプト展開時に自動で「作成」を実行する</strong>をオンにすると、その欄で展開した直後に Gemini へ送信します。オフなら、プロンプトを直してから自分で実行できます。オンのときは、追加のクリックなしでプロンプトが Google に送られます。</p>
+
+        <h2>変数</h2>
+        <p>変数は挿入するときに置き換わります。<code>{{nickname}}</code> のような未知の名前はそのまま残ります。知っている変数で値が無いときは空になります。</p>
+        <table>
+          <thead>
+            <tr><th>変数</th><th>結果</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>{{date}}</code></td><td>今日の日付（YYYY/MM/DD）</td></tr>
+            <tr><td><code>{{date:YYYY年M月D日}}</code></td><td>自分で指定した日付の形。使えるトークンは <code>YYYY</code> <code>MM</code> <code>DD</code> <code>M</code> <code>D</code> <code>HH</code> <code>mm</code> <code>ddd</code> <code>dddd</code></td></tr>
+            <tr><td><code>{{time}}</code></td><td>現在時刻（HH:mm）</td></tr>
+            <tr><td><code>{{weekday}}</code></td><td>表示言語に合わせた短い曜日</td></tr>
+            <tr><td><code>{{to.name}}</code> <code>{{to.firstName}}</code> <code>{{to.lastName}}</code> <code>{{to.email}}</code></td><td>最初の To。「山田 太郎」は姓が山田、名が太郎。「John Smith」は名が John、姓が Smith になります。</td></tr>
+            <tr><td><code>{{from.name}}</code> <code>{{from.email}}</code></td><td>選択中の差出人</td></tr>
+            <tr><td><code>{{cursor}}</code></td><td>展開後のカーソル位置。Gmail 本文と Gemini プロンプトで使えます</td></tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。</p>
+  </body>
+</html>

@@ -1,0 +1,353 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  addRecipients,
+  applyRecipientField,
+  clearRecipients,
+  ensureFieldVisible,
+  readRecipients,
+} from './recipients';
+import { simulatePeopleKit } from './__fixtures__/peoplekit-sim';
+
+const fixtureHtml = `
+<div id="gmail-compose-root" role="dialog" class="M9">
+  <div class="wO nr">
+    <div name="to" class="anm">
+      <div class="afZ" data-hovercard-id="tanaka@example.com">
+        <div class="af0">
+          <div class="akl">tanaka@example.com</div>
+          <div class="akk">田中 太郎</div>
+        </div>
+        <div class="af6">
+          <div class="afX" aria-label="削除"><svg></svg></div>
+        </div>
+      </div>
+      <div class="aH9">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+    </div>
+  </div>
+
+  <span class="baT">
+    <span class="aB gQ pE" role="link" data-tooltip="Cc の宛先を追加">Cc</span>
+    <span class="aB gQ pB" role="link" data-tooltip="Bcc の宛先を追加">Bcc</span>
+  </span>
+
+  <div id="cc-container" class="bzf" style="display: none">
+    <div class="wO nr">
+      <div name="cc" class="anm">
+        <input id="cc-input" class="agP aFx" peoplekit-id="BbVjBd" aria-label="Cc の宛先" type="text" role="combobox" value="" />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+describe('gmail recipients', () => {
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    document.body.innerHTML = fixtureHtml;
+    root = document.getElementById('gmail-compose-root') as HTMLElement;
+  });
+
+  it('reads existing To recipients from chips', () => {
+    const list = readRecipients(root, 'to');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.email).toBe('tanaka@example.com');
+    expect(list[0]?.name).toBe('田中 太郎');
+  });
+
+  it('clears recipient chips by clicking delete button', async () => {
+    simulatePeopleKit(root);
+    expect(readRecipients(root, 'to')).toHaveLength(1);
+    const cleared = await clearRecipients(root, 'to');
+    expect(cleared).toBe(true);
+    expect(readRecipients(root, 'to')).toHaveLength(0);
+  });
+
+  it('ensures Cc field becomes visible when toggled', async () => {
+    const ccContainer = document.getElementById('cc-container') as HTMLElement;
+    const ccInput = document.getElementById('cc-input') as HTMLInputElement;
+
+    const ccToggle = document.querySelector('span[data-tooltip*="Cc"]') as HTMLElement;
+    ccToggle.addEventListener('click', () => {
+      ccContainer.style.display = 'block';
+    });
+
+    const isVis = await ensureFieldVisible(root, 'cc');
+    expect(isVis).toBe(true);
+  });
+
+  it('applies replace mode on recipient field', async () => {
+    simulatePeopleKit(root);
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['sato@example.com'],
+    });
+    expect(result).toBe('ok');
+    const list = readRecipients(root, 'to');
+    expect(list.map((r) => r.email)).toEqual(['sato@example.com']);
+  });
+
+  it('restores the previous recipients when a replacement address cannot be added', async () => {
+    simulatePeopleKit(root, { reject: ['sato@example.com'] });
+    const input = root.querySelector('input[aria-label="To の宛先"]') as HTMLInputElement;
+
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['sato@example.com'],
+    });
+
+    expect(result).toBe('failed');
+    expect(readRecipients(root, 'to').map((r) => r.email.toLowerCase())).toEqual(['tanaka@example.com']);
+    expect(input.value).toBe('');
+  });
+
+  it('reports inconsistent when the previous recipients cannot be restored either', async () => {
+    simulatePeopleKit(root, { reject: ['sato@example.com', 'tanaka@example.com'] });
+
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['sato@example.com'],
+    });
+
+    expect(result).toBe('inconsistent');
+  });
+
+  it('removes only the recipients that are not in the replacement list', async () => {
+    simulatePeopleKit(root);
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['tanaka@example.com', 'sato@example.com'],
+    });
+    expect(result).toBe('ok');
+    expect(readRecipients(root, 'to').map((r) => r.email.toLowerCase())).toEqual([
+      'tanaka@example.com',
+      'sato@example.com',
+    ]);
+  });
+
+  it('rolls back appended recipients when one of them fails', async () => {
+    simulatePeopleKit(root, { reject: ['suzuki@example.com'] });
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'append',
+      emails: ['sato@example.com', 'suzuki@example.com'],
+    });
+    expect(result).toBe('failed');
+    expect(readRecipients(root, 'to').map((r) => r.email.toLowerCase())).toEqual(['tanaka@example.com']);
+  });
+
+  it('applies replace mode as fast no-op when recipients already match without duplicate additions', async () => {
+    // Initial root has tanaka@example.com
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual(['tanaka@example.com']);
+
+    const start = Date.now();
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['tanaka@example.com'],
+    });
+    const duration = Date.now() - start;
+
+    expect(result).toBe('ok');
+    expect(duration).toBeLessThan(50); // Immediate no-op!
+    // No duplicate chips created
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual(['tanaka@example.com']);
+  });
+
+  it('reports failure and keeps the chip when Gmail does not remove it', async () => {
+    const chip = root.querySelector('.afZ');
+    const cleared = await clearRecipients(root, 'to');
+    expect(cleared).toBe(false);
+    expect(chip?.isConnected).toBe(true);
+  });
+
+  it('does not add new recipients in replace mode when old ones could not be cleared', async () => {
+    const input = root.querySelector('input[aria-label="To の宛先"]') as HTMLInputElement;
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'replace',
+      emails: ['sato@example.com'],
+    });
+    expect(result).toBe('failed');
+    expect(input.value).toBe('');
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual(['tanaka@example.com']);
+  });
+
+  it('adds recipients and confirms each one became a chip', async () => {
+    simulatePeopleKit(root);
+    const ok = await addRecipients(root, 'to', ['sato@example.com', 'suzuki@example.com']);
+    expect(ok).toBe(true);
+    expect(readRecipients(root, 'to').map((r) => r.email)).toEqual([
+      'tanaka@example.com',
+      'sato@example.com',
+      'suzuki@example.com',
+    ]);
+  });
+
+  it('reports failure when a typed address never becomes a chip', async () => {
+    const ok = await addRecipients(root, 'to', ['sato@example.com']);
+    expect(ok).toBe(false);
+  });
+
+  it('applies append mode on recipient field without duplicating', async () => {
+    const result = await applyRecipientField(root, 'to', {
+      mode: 'append',
+      emails: ['tanaka@example.com'], // already exists
+    });
+    expect(result).toBe('ok');
+  });
+
+  it('expands collapsed To row when div.aoD.hl is clicked', async () => {
+    // Simulate collapsed To row (like failsetsendto.html)
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">宛先</div>
+      </div>
+    `;
+    document.body.appendChild(collapsedRoot);
+
+    const collapsedHeader = collapsedRoot.querySelector('.aoD.hl') as HTMLElement;
+    const hiddenTable = collapsedRoot.querySelector('.fX.aiL') as HTMLElement;
+    const toInput = collapsedRoot.querySelector('input') as HTMLInputElement;
+
+    collapsedHeader.addEventListener('click', () => {
+      hiddenTable.style.display = 'block';
+    });
+
+    const isVis = await ensureFieldVisible(collapsedRoot, 'to');
+    expect(isVis).toBe(true);
+    expect(hiddenTable.style.display).toBe('block');
+
+    collapsedRoot.remove();
+  });
+
+  it('reports failure without editing Gmail styles when the collapsed To row does not expand', async () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">宛先</div>
+      </div>
+    `;
+    document.body.appendChild(collapsedRoot);
+
+    const hiddenTable = collapsedRoot.querySelector('.fX.aiL') as HTMLElement;
+    const collapsedHeader = collapsedRoot.querySelector('.aoD.hl') as HTMLElement;
+
+    // No click listener attached, so the row never expands
+    const isVis = await ensureFieldVisible(collapsedRoot, 'to');
+    expect(isVis).toBe(false);
+    expect(hiddenTable.style.display).toBe('none');
+    expect(collapsedHeader.style.display).toBe('');
+
+    collapsedRoot.remove();
+  });
+
+  it('reads real PeopleKit chip with data-name and cleans domain parentheses', () => {
+    const realRoot = document.createElement('div');
+    realRoot.className = 'M9';
+    realRoot.innerHTML = `
+      <div class="wO nr">
+        <div name="to" class="anm">
+          <div role="option" class="afV" data-hovercard-id="tanaka.taro@example.com" data-name="田中 太郎">
+            <div class="afZ af1">
+              <div class="akl">田中 太郎</div>
+              <div class="akk">（example.com）</div>
+            </div>
+          </div>
+          <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    `;
+
+    const list = readRecipients(realRoot, 'to');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.email).toBe('tanaka.taro@example.com');
+    expect(list[0]?.name).toBe('田中 太郎');
+  });
+
+  it('falls back to reading contact from collapsed header when chips are not in container', () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+      <div class="aoD hl" tabindex="1">
+        <div class="oL aDm">
+          <span data-hovercard-id="tanaka.taro@example.com">田中 太郎 (example.com)</span>
+        </div>
+      </div>
+    `;
+
+    const list = readRecipients(collapsedRoot, 'to');
+    expect(list).toHaveLength(1);
+    expect(list[0]?.email).toBe('tanaka.taro@example.com');
+    expect(list[0]?.name).toBe('田中 太郎');
+  });
+
+  it('clears multiple recipient chips cleanly', async () => {
+    const multiRoot = document.createElement('div');
+    multiRoot.className = 'M9';
+    multiRoot.innerHTML = `
+      <div class="wO nr">
+        <div name="to" class="anm">
+          <div class="afZ" data-hovercard-id="user1@example.com">
+            <div class="af0"><div class="akl">user1@example.com</div></div>
+            <div class="afX" aria-label="削除"><svg></svg></div>
+          </div>
+          <div class="afZ" data-hovercard-id="user2@example.com">
+            <div class="af0"><div class="akl">user2@example.com</div></div>
+            <div class="afX" aria-label="削除"><svg></svg></div>
+          </div>
+          <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    `;
+
+    // Attach click listeners to delete buttons
+    multiRoot.querySelectorAll('.afX').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.closest('.afZ')?.remove();
+      });
+    });
+
+    expect(readRecipients(multiRoot, 'to')).toHaveLength(2);
+    const ok = await clearRecipients(multiRoot, 'to');
+    expect(ok).toBe(true);
+    expect(readRecipients(multiRoot, 'to')).toHaveLength(0);
+  });
+
+  it('resolves contact name from PeopleKit cache when collapsed header only has raw email', () => {
+    const collapsedRoot = document.createElement('div');
+    collapsedRoot.className = 'M9';
+    collapsedRoot.innerHTML = `
+      <div class="fX aiL" style="display: none;"></div>
+      <div class="aoD hl">
+        <div class="oL aDm">
+          <span email="tanaka.taro@example.com" data-hovercard-id="tanaka.taro@example.com">tanaka.taro@example.com</span>
+        </div>
+      </div>
+      <div class="afA" style="display: none;">
+        <div role="option" pkd-target="1:tanaka.taro@example.com;tanaka.taro@example.com">
+          <div class="agH" data-hovercard-id="tanaka.taro@example.com" data-name="田中 太郎">
+            <div class="aL8" data-name="田中 太郎">田中 太郎</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const recipients = readRecipients(collapsedRoot, 'to');
+    expect(recipients).toHaveLength(1);
+    expect(recipients[0]?.email).toBe('tanaka.taro@example.com');
+    expect(recipients[0]?.name).toBe('田中 太郎');
+  });
+});
+

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FluxSnip Runtime Playground</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="playground-container">
+    <header class="playground-header">
+      <div class="header-left">
+        <h1 class="playground-title">FluxSnip Runtime Playground</h1>
+        <span class="badge">Development & QA Environment</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-seed-templates" class="btn btn-outline" type="button">Seed Test Templates</button>
+        <button id="btn-open-options" class="btn btn-primary" type="button">Open Options</button>
+      </div>
+    </header>
+
+    <div class="instructions-panel">
+      <h3>Testing Instructions</h3>
+      <ul>
+        <li><strong>Keyword Expansion:</strong> Type a keyword (e.g. <code>;thx</code>, <code>;meeting</code>, <code>;table</code>) and press <kbd>Tab</kbd>.</li>
+        <li><strong>Template Picker:</strong> Press <kbd>Alt+J</kbd> (or configured shortcut) to summon the searchable picker.</li>
+        <li><strong>Non-matching Tab:</strong> Pressing Tab when no keyword matches should preserve normal tab behavior (focus moves to next element).</li>
+        <li><strong>IME Composition:</strong> Pressing Tab during IME text conversion should not trigger expansion.</li>
+      </ul>
+    </div>
+
+    <div class="editors-grid">
+      <!-- Editor 1: Gmail Simulator -->
+      <div class="editor-card">
+        <div class="editor-card-header">
+          <div class="editor-title-wrap">
+            <span class="platform-icon">✉️</span>
+            <h2>1. Gmail Simulator</h2>
+          </div>
+          <span class="editor-tag">Strategy: DOM &rarr; Paste &rarr; Clipboard</span>
+        </div>
+        <div class="editor-meta">
+          <label>Simulated To: <span id="gmail-sim-to">Tanaka Taro &lt;tanaka@example.com&gt;</span></label>
+        </div>
+        <div
+          id="editor-gmail"
+          class="sim-editor-box"
+          contenteditable="true"
+          role="textbox"
+          placeholder="Type ;thx or ;table and press Tab..."
+        ></div>
+      </div>
+
+      <!-- Editor 2: Teams Simulator -->
+      <div class="editor-card">
+        <div class="editor-card-header">
+          <div class="editor-title-wrap">
+            <span class="platform-icon">👥</span>
+            <h2>2. Teams Simulator (PWA)</h2>
+          </div>
+          <span class="editor-tag">Strategy: Paste &rarr; insertText &rarr; Clipboard</span>
+        </div>
+        <div class="editor-meta">
+          <span>Simulated rich paste handler with defaultPrevented</span>
+        </div>
+        <div
+          id="editor-teams"
+          class="sim-editor-box"
+          contenteditable="true"
+          role="textbox"
+          placeholder="Type ;teams and press Tab..."
+        ></div>
+      </div>
+
+      <!-- Editor 3: Google Chat Simulator -->
+      <div class="editor-card">
+        <div class="editor-card-header">
+          <div class="editor-title-wrap">
+            <span class="platform-icon">💬</span>
+            <h2>3. Google Chat Simulator (PWA)</h2>
+          </div>
+          <span class="editor-tag">Strategy: insertText (Chat markdown)</span>
+        </div>
+        <div class="editor-meta">
+          <span>Markdown converter: *bold*, _italic_, ~strike~</span>
+        </div>
+        <div
+          id="editor-chat"
+          class="sim-editor-box"
+          contenteditable="true"
+          role="textbox"
+          placeholder="Type ;chat and press Tab..."
+        ></div>
+      </div>
+    </div>
+
+    <div class="playground-logs">
+      <div class="logs-header">
+        <h3>Runtime Events Log</h3>
+        <button id="btn-clear-logs" class="btn btn-sm btn-outline" type="button">Clear</button>
+      </div>
+      <div id="logs-container" class="logs-content"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

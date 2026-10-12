@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Google Chat — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/chat.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html">概要</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html" aria-current="page">Google Chat</a>
+        <a href="settings.html">設定</a>
+        <a href="backup.html">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>Google Chat</h1>
+        <p class="lede">このタブの定型文は Google Chat だけで使います。<code>chat.google.com</code> と、Gmail に埋め込まれた Chat パネルが対象です。</p>
+        <p>作成、保存、検索の手順は<a href="index.html">概要</a>にあります。</p>
+
+        <h2>挿入する</h2>
+        <p>メッセージ欄にカーソルを置き、キーワードを入力して <kbd>Tab</kbd> を押します。ピッカー（初期値 <kbd>Alt</kbd>+<kbd>J</kbd>）から <kbd>Enter</kbd> でも挿入できます。Chat に To、Cc、件名はありません。</p>
+
+        <h2>Chat が残せる書式</h2>
+        <p>Chat が保てない書式があると、編集画面が警告します。保存前に<strong>プレビュー</strong>の「Google Chat 変換後プレビュー」を見てください。</p>
+        <table>
+          <thead>
+            <tr><th>エディタ上</th><th>Chat に入る形</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>太字</td><td><code>*テキスト*</code></td></tr>
+            <tr><td>斜体</td><td><code>_テキスト_</code></td></tr>
+            <tr><td>取り消し線</td><td><code>~テキスト~</code></td></tr>
+            <tr><td>コード</td><td><code>`テキスト`</code></td></tr>
+            <tr><td>箇条書き・番号リスト</td><td>1 項目ずつ改行。<code>• </code> または <code>1. </code> が付く</td></tr>
+            <tr><td>リンク</td><td>リンクの文字。URL と違うときは URL も付ける</td></tr>
+            <tr><td>表</td><td>プレーンテキスト。1 行が 1 行で、セルはタブ区切り</td></tr>
+          </tbody>
+        </table>
+        <p>文字色や文字サイズなどの見た目は落ちます。<code>{{date}}</code>、<code>{{time}}</code>、<code>{{weekday}}</code> は展開されます。<code>{{to.name}}</code> と <code>{{cursor}}</code> は Gmail 用です。</p>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。</p>
+  </body>
+</html>

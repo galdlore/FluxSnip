@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>設定 — FluxSnip ヘルプ</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">本文へスキップ</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>ヘルプ</span></p>
+      <p class="lang-switch"><a href="../en/settings.html" lang="en" hreflang="en">English</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="ヘルプのページ">
+        <a href="index.html">概要</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html" aria-current="page">設定</a>
+        <a href="backup.html">バックアップ</a>
+      </nav>
+      <main id="content">
+        <h1>設定</h1>
+        <p class="lede">ここでの変更はこのブラウザに保存され、変えた時点で反映されます。</p>
+
+        <h2>表示言語</h2>
+        <ul>
+          <li><strong>ブラウザに合わせる</strong> — Chrome の言語に従います。Chrome の言語が <code>ja</code> で始まるときはヘルプを日本語で、それ以外は英語で開きます。</li>
+          <li><strong>English</strong> または <strong>日本語</strong> — 設定画面、Gmail・Teams・Chat 上のトーストとピッカー、ヘルプをその言語にします。</li>
+        </ul>
+        <p>言語を変えると、ラベルを揃えるために設定画面を読み直します。この値は、<a href="backup.html">バックアップ</a>に設定が含まれるときに一緒に書き出されます。</p>
+
+        <h2>ピッカーのショートカット</h2>
+        <p><strong>キーを記録</strong>は、次に押したキーの組み合わせを保存します。修飾キーだけでは決まらず、<kbd>Alt</kbd>+<kbd>J</kbd> のように最後のキーまで押してください。<strong>既定に戻す</strong>は <kbd>Alt</kbd>+<kbd>J</kbd> に戻します。<kbd>Ctrl</kbd>+<kbd>Space</kbd> など、IME がすでに使っている組み合わせは避けてください。</p>
+
+        <h2>有効にするプラットフォーム</h2>
+        <p>オフにすると、そのサービスではキーワード展開もピッカーも止まります。定型文自体は残ります。また使いたくなったらオンに戻してください。</p>
+
+        <h2>Gmail 宛先操作の待機時間</h2>
+        <p>宛先チップの追加・削除や、Cc・Bcc 欄を開くのを Gmail が終えるまで待つ時間です。20〜600 ms で指定できます。その時間を過ぎても 600 ms 以内に反応があれば成功になり、保存している待機時間は自動で伸びます。次からは余裕を持って待ち始めます。</p>
+
+        <h2>検出済みの Gmail 差出人</h2>
+        <p>Gmail の差出人メニューで見つけたアドレスがここに並び、Gmail 定型文の差出人欄の候補になります。ここから消しても候補が消えるだけで、Gmail 側のエイリアスは削除されません。</p>
+      </main>
+    </div>
+    <p class="page-footer">このページは、OS のライトモード／ダークモードに従います。</p>
+  </body>
+</html>

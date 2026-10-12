@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Overview — FluxSnip Help</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>Help</span></p>
+      <p class="lang-switch"><a href="../ja/index.html" lang="ja" hreflang="ja">日本語</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Help pages">
+        <a href="index.html" aria-current="page">Overview</a>
+        <a href="gmail.html">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">Settings</a>
+        <a href="backup.html">Backup</a>
+      </nav>
+      <main id="content">
+        <h1>Overview</h1>
+        <p class="lede">FluxSnip inserts templates you write into Gmail, Microsoft Teams, and Google Chat.</p>
+
+        <h2>Open the options page</h2>
+        <p>Click the FluxSnip icon in Chrome. Templates, settings, and backup all live on this page. The <strong>Help</strong> button opens the guide for the tab you are on.</p>
+
+        <h2>Insert a template</h2>
+        <ol>
+          <li>Type the template’s keyword in the message box and press <kbd>Tab</kbd>. Tab is taken over only when that keyword matches. If it does not match, Tab moves focus as usual. Tab does nothing special while an IME is converting text.</li>
+          <li>Or press the picker shortcut (default <kbd>Alt</kbd>+<kbd>J</kbd>), type to search, and press <kbd>Enter</kbd>. <kbd>↑</kbd> and <kbd>↓</kbd> move the highlight. <kbd>Esc</kbd> closes the picker.</li>
+        </ol>
+        <p>Keywords are case-sensitive, 1–32 characters, using letters, digits, and <code>_ - ; : . ! / @ #</code>. A leading <code>;</code> such as <code>;thx</code> is a good way to avoid ordinary words.</p>
+
+        <h2>Templates are separate for each service</h2>
+        <p>A template saved on the Gmail tab is not offered in Teams or Chat. Create it on the tab for the service where you want to use it.</p>
+        <ul>
+          <li><a href="gmail.html">Gmail</a> — body, To/Cc/Bcc, subject, From, and an optional Gemini prompt</li>
+          <li><a href="teams.html">Teams</a> — message body, including tables</li>
+          <li><a href="chat.html">Google Chat</a> — message body, converted to Chat’s formatting</li>
+          <li><a href="settings.html">Settings</a> — language, shortcut, and switches</li>
+          <li><a href="backup.html">Backup</a> — export and import</li>
+        </ul>
+
+        <h2>Editing a template</h2>
+        <ul>
+          <li><strong>+ New Template</strong> starts a draft. It is not stored until you save.</li>
+          <li>Save with the button or <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>⌘</kbd>+<kbd>S</kbd> on macOS).</li>
+          <li>The body editor has <strong>Visual</strong>, <strong>HTML</strong>, and <strong>Preview</strong>. You can paste tables from Excel or Word.</li>
+          <li>Scripts and other unsafe markup are removed when you save.</li>
+          <li>Switching templates or tabs with unsaved edits asks you to confirm.</li>
+          <li>Duplicate copies the template, adds a copy marker to the name, and clears the keyword so you can set a new one.</li>
+          <li>If two templates share a keyword, the list shows a warning. The newest one is the one Tab expands.</li>
+        </ul>
+
+        <h2>Language</h2>
+        <p>On <a href="settings.html">Settings</a>, choose <strong>Match browser</strong>, <strong>English</strong>, or <strong>日本語</strong>. That choice is saved on this device and used for the options page, messages inside Gmail, Teams, and Chat, and these Help pages. Match browser follows Chrome’s language. If Chrome is set to a language other than Japanese, Help opens in English.</p>
+      </main>
+    </div>
+    <p class="page-footer">This page follows your system’s light or dark appearance. Templates stay in this browser.</p>
+  </body>
+</html>

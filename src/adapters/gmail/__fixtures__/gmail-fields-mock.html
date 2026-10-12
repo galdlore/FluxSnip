@@ -1,0 +1,90 @@
+<div id="gmail-compose-root" role="dialog" class="M9">
+  <!-- From row -->
+  <table class="GS">
+    <tbody class="bze">
+      <tr class="bzf zm">
+        <td class="ok az4">
+          <label class="gO zl">差出人</label>
+        </td>
+        <td class="az3">
+          <div role="button" aria-haspopup="true" class="J-JN-M-I az2 L3">
+            <span class="az1">山田 太郎 &lt;primary@example.com&gt;</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <input type="hidden" name="from" value="primary@example.com" />
+
+  <!-- To row with existing chip -->
+  <div class="wO nr">
+    <div name="to" class="anm">
+      <div class="afZ" data-hovercard-id="tanaka@example.com">
+        <div class="af0">
+          <div class="akl">tanaka@example.com</div>
+          <div class="akk">田中 太郎</div>
+        </div>
+        <div class="af6">
+          <div class="afX" aria-label="削除"><svg></svg></div>
+        </div>
+      </div>
+      <div class="aH9">
+        <input class="agP aFx" peoplekit-id="BbVjBd" aria-label="To の宛先" type="text" role="combobox" value="" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Cc toggle and row -->
+  <span class="baT">
+    <span class="aB gQ pE" role="link" data-tooltip="Cc の宛先を追加">Cc</span>
+    <span class="aB gQ pB" role="link" data-tooltip="Bcc の宛先を追加">Bcc</span>
+  </span>
+
+  <tr id="cc-row" class="bzf" style="display: none">
+    <td>
+      <div class="wO nr">
+        <div name="cc" class="anm">
+          <input id="cc-input" class="agP aFx" peoplekit-id="BbVjBd" aria-label="Cc の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    </td>
+  </tr>
+
+  <tr id="bcc-row" class="bzf" style="display: none">
+    <td>
+      <div class="wO nr">
+        <div name="bcc" class="anm">
+          <input id="bcc-input" class="agP aFx" peoplekit-id="BbVjBd" aria-label="Bcc の宛先" type="text" role="combobox" value="" />
+        </div>
+      </div>
+    </td>
+  </tr>
+
+  <!-- Subject row -->
+  <div class="aoD az6">
+    <input name="subjectbox" class="aoT" placeholder="件名" aria-label="件名" value="既存の件名" />
+  </div>
+
+  <!-- Body row -->
+  <div class="Ap">
+    <div
+      id="mock-body"
+      role="textbox"
+      contenteditable="true"
+      g_editable="true"
+      aria-label="メッセージ本文"
+      class="Am Al editable"
+    >
+      <p>Body</p>
+    </div>
+  </div>
+</div>
+
+<!-- Outside From Dropdown Menu -->
+<div role="menu" aria-haspopup="true" class="J-M" style="display: none">
+  <div class="SK AX">
+    <div role="menuitem" class="J-N" value="alias@example.com">山田太郎 &lt;alias@example.com&gt;</div>
+    <div role="menuitem" class="J-N" value="primary@example.com">山田 太郎 &lt;primary@example.com&gt;</div>
+    <div role="menuitem" class="J-N" value="info@example.com">会社案内 &lt;info@example.com&gt;</div>
+  </div>
+</div>

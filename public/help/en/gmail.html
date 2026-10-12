@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gmail — FluxSnip Help</title>
+    <link rel="stylesheet" href="../help.css" />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="top">
+      <p class="brand">FluxSnip <span>Help</span></p>
+      <p class="lang-switch"><a href="../ja/gmail.html" lang="ja" hreflang="ja">日本語</a></p>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Help pages">
+        <a href="index.html">Overview</a>
+        <a href="gmail.html" aria-current="page">Gmail</a>
+        <a href="teams.html">Teams</a>
+        <a href="chat.html">Google Chat</a>
+        <a href="settings.html">Settings</a>
+        <a href="backup.html">Backup</a>
+      </nav>
+      <main id="content">
+        <h1>Gmail</h1>
+        <p class="lede">Create templates for <code>mail.google.com</code> and insert them in a compose window.</p>
+        <p>Shared editing steps (save, duplicate, search, the visual editor) are on the <a href="index.html">overview</a>.</p>
+
+        <h2>Insert</h2>
+        <p>Focus the message body, the subject, or a recipient field. Type the keyword and press <kbd>Tab</kbd>, or open the picker (default <kbd>Alt</kbd>+<kbd>J</kbd>) and press <kbd>Enter</kbd>. The body is inserted at the caret, so a signature or quoted thread below it stays in place.</p>
+        <p>In Gmail, <kbd>Ctrl</kbd>+<kbd>Z</kbd> just after an expansion restores the keyword, and <kbd>Ctrl</kbd>+<kbd>Y</kbd> redoes it.</p>
+
+        <h2>Header fields</h2>
+        <p>Leave a field blank when the template should not change it.</p>
+        <table>
+          <thead>
+            <tr><th>Field</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>From</td><td>Selects a sender alias. It works only for an address already added in Gmail’s “Send mail as” settings.</td></tr>
+            <tr><td>To, Cc, Bcc</td><td>One address per line or separated by commas. <strong>Replace</strong> clears that field first. <strong>Append</strong> adds addresses.</td></tr>
+            <tr><td>Subject</td><td><strong>Replace</strong> overwrites the subject. <strong>If empty</strong> writes it only when the subject is blank.</td></tr>
+          </tbody>
+        </table>
+        <p class="note">To, Cc, Bcc, From, and subject are recognized when Gmail’s own display language is Japanese or English. In another Gmail language the body can still expand, and a toast warns you if a header field could not be set.</p>
+
+        <h2>Gemini prompt</h2>
+        <p><strong>Gemini Prompt (Alt+H)</strong> is text placed in Gmail’s Gemini box. <code>{{cursor}}</code> marks where the caret should land. <strong>Automatically submit when expanding in Gemini prompt</strong> sends that prompt to Gemini as soon as you expand the template there. Leave it off to edit the prompt before you run it. With it on, the prompt is sent to Google without an extra click.</p>
+
+        <h2>Variables</h2>
+        <p>Variables are filled in when you insert. An unknown name such as <code>{{nickname}}</code> is left as written. A known variable with no value becomes empty.</p>
+        <table>
+          <thead>
+            <tr><th>Variable</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>{{date}}</code></td><td>Today as YYYY/MM/DD</td></tr>
+            <tr><td><code>{{date:YYYY年M月D日}}</code></td><td>Your own date pattern. Tokens: <code>YYYY</code> <code>MM</code> <code>DD</code> <code>M</code> <code>D</code> <code>HH</code> <code>mm</code> <code>ddd</code> <code>dddd</code></td></tr>
+            <tr><td><code>{{time}}</code></td><td>Current time as HH:mm</td></tr>
+            <tr><td><code>{{weekday}}</code></td><td>Short weekday in the active language</td></tr>
+            <tr><td><code>{{to.name}}</code> <code>{{to.firstName}}</code> <code>{{to.lastName}}</code> <code>{{to.email}}</code></td><td>The first To recipient. “山田 太郎” splits into surname 山田 and given name 太郎. “John Smith” splits into John and Smith.</td></tr>
+            <tr><td><code>{{from.name}}</code> <code>{{from.email}}</code></td><td>The selected From</td></tr>
+            <tr><td><code>{{cursor}}</code></td><td>Caret position after expansion, in the Gmail body and the Gemini prompt</td></tr>
+          </tbody>
+        </table>
+      </main>
+    </div>
+    <p class="page-footer">This page follows your system’s light or dark appearance.</p>
+  </body>
+</html>
