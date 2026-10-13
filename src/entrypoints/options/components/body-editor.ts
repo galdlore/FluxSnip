@@ -3,7 +3,7 @@ import { sanitizeHtml } from '@/core/html/sanitize';
 import { t } from '@/core/i18n';
 import { MAX_BODY_HTML_BYTES, type Platform } from '@/core/types';
 import { createEditorToolbar, type EditorToolbar } from './editor-toolbar';
-import { showTableContextMenu } from './table-picker';
+import { setupTableColumnResizing, showTableContextMenu } from './table-picker';
 
 export interface BodyEditor {
   readonly element: HTMLElement;
@@ -243,6 +243,9 @@ export function createBodyEditor(initialPlatform: Platform): BodyEditor {
       showTableContextMenu(e, cell, notifyChange);
     }
   });
+
+  // Table column drag-resizing
+  setupTableColumnResizing(visualEl, notifyChange);
 
   // HTML source textarea events
   htmlTextarea.addEventListener('input', notifyChange);

@@ -161,10 +161,11 @@ export function showTableContextMenu(
       if (!row) continue;
       const td = document.createElement(row.cells[0]?.tagName.toLowerCase() === 'th' ? 'th' : 'td');
       td.style.border = '1px solid #999';
-      td.style.padding = '4px 8px';
+      td.style.padding = '6px 8px';
       td.innerHTML = '<br>';
       row.insertBefore(td, row.cells[colIndex] ?? null);
     }
+    distributeColumns(table);
   });
 
   addItem('editor_table_insert_col_right', () => {
@@ -174,7 +175,7 @@ export function showTableContextMenu(
       if (!row) continue;
       const td = document.createElement(row.cells[0]?.tagName.toLowerCase() === 'th' ? 'th' : 'td');
       td.style.border = '1px solid #999';
-      td.style.padding = '4px 8px';
+      td.style.padding = '6px 8px';
       td.innerHTML = '<br>';
       const target = row.cells[colIndex + 1];
       if (target) {
@@ -183,6 +184,23 @@ export function showTableContextMenu(
         row.appendChild(td);
       }
     }
+    distributeColumns(table);
+  });
+
+  const sepWidth = document.createElement('div');
+  sepWidth.className = 'context-menu-separator';
+  menu.appendChild(sepWidth);
+
+  addItem('editor_table_distribute_cols', () => {
+    distributeColumns(table);
+  });
+
+  addItem('editor_table_widen_col', () => {
+    adjustColumnWidth(table, targetCell.cellIndex, 5);
+  });
+
+  addItem('editor_table_narrow_col', () => {
+    adjustColumnWidth(table, targetCell.cellIndex, -5);
   });
 
   const sep = document.createElement('div');
@@ -202,7 +220,11 @@ export function showTableContextMenu(
         row.cells[colIndex]?.remove();
       }
     }
-    if (table.rows[0]?.cells.length === 0) table.remove();
+    if (table.rows[0]?.cells.length === 0) {
+      table.remove();
+    } else {
+      distributeColumns(table);
+    }
   });
 
   addItem('editor_table_delete_table', () => {
@@ -222,3 +244,158 @@ export function showTableContextMenu(
   };
   setTimeout(() => window.addEventListener('click', closeMenu), 50);
 }
+
+function distributeColumns(table: HTMLTableElement) {
+  table.style.tableLayout = 'fixed';
+  table.style.width = '100%';
+  const firstRow = table.rows[0];
+  if (!firstRow) return;
+  const numCols = firstRow.cells.length;
+  if (numCols === 0) return;
+  const colWidth = `${(100 / numCols).toFixed(2)}%`;
+  for (let r = 0; r < table.rows.length; r++) {
+    const row = table.rows[r];
+    if (!row) continue;
+    for (let c = 0; c < row.cells.length; c++) {
+      const cell = row.cells[c];
+      if (cell) {
+        cell.style.width = colWidth;
+      }
+    }
+  }
+}
+
+function adjustColumnWidth(table: HTMLTableElement, colIndex: number, deltaPercent: number) {
+  table.style.tableLayout = 'fixed';
+  table.style.width = '100%';
+  const firstRow = table.rows[0];
+  if (!firstRow) return;
+  const numCols = firstRow.cells.length;
+  if (numCols <= 1) return;
+
+  const widths: number[] = [];
+  let totalPercent = 0;
+  for (let c = 0; c < numCols; c++) {
+    const styleW = firstRow.cells[c]?.style.width;
+    let w = parseFloat(styleW || '');
+    if (isNaN(w) || w <= 0) {
+      w = 100 / numCols;
+    }
+    widths.push(w);
+    totalPercent += w;
+  }
+  for (let c = 0; c < numCols; c++) {
+    widths[c] = (widths[c]! / totalPercent) * 100;
+  }
+
+  const oldTargetW = widths[colIndex] ?? (100 / numCols);
+  const newTargetW = Math.max(5, Math.min(85, oldTargetW + deltaPercent));
+  const diff = newTargetW - oldTargetW;
+  widths[colIndex] = newTargetW;
+
+  const otherTotal = 100 - oldTargetW;
+  if (otherTotal > 0) {
+    for (let c = 0; c < numCols; c++) {
+      if (c !== colIndex) {
+        const ratio = widths[c]! / otherTotal;
+        widths[c] = Math.max(5, widths[c]! - diff * ratio);
+      }
+    }
+  }
+
+  for (let r = 0; r < table.rows.length; r++) {
+    const row = table.rows[r];
+    if (!row) continue;
+    for (let c = 0; c < row.cells.length; c++) {
+      const cell = row.cells[c];
+      if (cell && widths[c] !== undefined) {
+        cell.style.width = `${widths[c]!.toFixed(2)}%`;
+      }
+    }
+  }
+}
+
+/**
+ * Enables interactive column edge dragging to resize table columns in the visual editor.
+ */
+export function setupTableColumnResizing(
+  editorEl: HTMLElement,
+  onTableModified: () => void
+): () => void {
+  let resizingCell: HTMLTableCellElement | null = null;
+  let startX = 0;
+  let startWidth = 0;
+  let tableEl: HTMLTableElement | null = null;
+
+  function onMouseMove(e: MouseEvent) {
+    if (!resizingCell || !tableEl) {
+      const target = e.target as HTMLElement;
+      const cell = target.closest('td, th') as HTMLTableCellElement | null;
+      if (cell && editorEl.contains(cell)) {
+        const rect = cell.getBoundingClientRect();
+        if (e.clientX >= rect.right - 6 && e.clientX <= rect.right + 2) {
+          editorEl.style.cursor = 'col-resize';
+          return;
+        }
+      }
+      editorEl.style.cursor = '';
+      return;
+    }
+
+    const dx = e.clientX - startX;
+    const tableWidth = tableEl.getBoundingClientRect().width;
+    if (tableWidth <= 0) return;
+
+    const minPx = 25;
+    const newPx = Math.max(minPx, startWidth + dx);
+    const newPct = (newPx / tableWidth) * 100;
+
+    const colIndex = resizingCell.cellIndex;
+    tableEl.style.tableLayout = 'fixed';
+    tableEl.style.width = '100%';
+
+    for (let r = 0; r < tableEl.rows.length; r++) {
+      const row = tableEl.rows[r];
+      if (row && row.cells[colIndex]) {
+        row.cells[colIndex]!.style.width = `${newPct.toFixed(2)}%`;
+      }
+    }
+  }
+
+  function onMouseDown(e: MouseEvent) {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    const cell = target.closest('td, th') as HTMLTableCellElement | null;
+    if (!cell || !editorEl.contains(cell)) return;
+
+    const rect = cell.getBoundingClientRect();
+    if (e.clientX >= rect.right - 6 && e.clientX <= rect.right + 2) {
+      resizingCell = cell;
+      tableEl = cell.closest('table');
+      startX = e.clientX;
+      startWidth = rect.width;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const onMouseUp = () => {
+        if (resizingCell) {
+          resizingCell = null;
+          tableEl = null;
+          editorEl.style.cursor = '';
+          onTableModified();
+        }
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+      window.addEventListener('mouseup', onMouseUp);
+    }
+  }
+
+  editorEl.addEventListener('mousemove', onMouseMove);
+  editorEl.addEventListener('mousedown', onMouseDown);
+
+  return () => {
+    editorEl.removeEventListener('mousemove', onMouseMove);
+    editorEl.removeEventListener('mousedown', onMouseDown);
+  };
+}
+

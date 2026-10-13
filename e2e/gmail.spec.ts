@@ -78,3 +78,29 @@ test('subject is set in replace mode', async ({ compose }) => {
   await expect(compose.body).toContainText('Subject set');
   await expect(compose.subject).toHaveValue('FluxSnip E2E subject');
 });
+
+test('table template expands and renders table element in Gmail body', async ({ compose }) => {
+  await compose.setTemplates([
+    {
+      keyword: ';e2etable',
+      text: 'Header1 Header2 Cell1 Cell2',
+      html: '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><tbody><tr><td style="border:1px solid #999;padding:6px 8px;width:50.00%">Header1</td><td style="border:1px solid #999;padding:6px 8px;width:50.00%">Header2</td></tr><tr><td style="border:1px solid #999;padding:6px 8px;width:50.00%">Cell1</td><td style="border:1px solid #999;padding:6px 8px;width:50.00%">Cell2</td></tr></tbody></table>',
+    },
+  ]);
+
+  await compose.body.click({ position: { x: 10, y: 10 } });
+  await compose.page.waitForTimeout(100);
+  await compose.page.keyboard.press('Home');
+  await compose.page.keyboard.type(';e2etable');
+  await compose.page.waitForTimeout(50);
+  await compose.page.keyboard.press('Tab');
+
+  await expect(compose.body.locator('table')).toBeVisible();
+  await expect(compose.body.locator('td').first()).toHaveText('Header1');
+  await expect(compose.body.locator('td').nth(1)).toHaveText('Header2');
+});
+
+
+
+
+

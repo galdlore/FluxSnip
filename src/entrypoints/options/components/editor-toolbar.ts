@@ -362,11 +362,12 @@ export function createEditorToolbar(
   const tableBtn = createBtn('btn-format-table', 'Table', '⊞', 'editor_btn_table', () => {
     saveCurrentRange();
     openTableGridPicker(tableBtn, (rows, cols) => {
-      let tableHtml = '<table style="border-collapse:collapse;width:100%"><tbody>';
+      const colWidth = (100 / cols).toFixed(2);
+      let tableHtml = '<table style="border-collapse:collapse;width:100%;table-layout:fixed"><tbody>';
       for (let r = 0; r < rows; r++) {
         tableHtml += '<tr>';
         for (let c = 0; c < cols; c++) {
-          tableHtml += '<td style="border:1px solid #999;padding:4px 8px"><br></td>';
+          tableHtml += `<td style="border:1px solid #999;padding:6px 8px;width:${colWidth}%"><br></td>`;
         }
         tableHtml += '</tr>';
       }
