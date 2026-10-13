@@ -8,8 +8,10 @@ export const PROFILE_DIR = process.env.FLUXSNIP_E2E_PROFILE ?? path.join(ROOT, '
 const EXTENSION_DIR = path.join(ROOT, '.output', 'chrome-mv3');
 
 export interface E2eTemplate {
+  platform?: 'gmail' | 'teams' | 'chat';
   keyword: string;
   text: string;
+  html?: string;
   to?: { mode: 'replace' | 'append'; emails: string[] };
   cc?: { mode: 'replace' | 'append'; emails: string[] };
   subject?: { mode: 'replace' | 'ifEmpty'; value: string };
@@ -17,15 +19,17 @@ export interface E2eTemplate {
   autoSubmitAi?: boolean;
 }
 
-function toStoredTemplate(t: E2eTemplate, i: number) {
+export function toStoredTemplate(t: E2eTemplate, i: number) {
+  const platform = t.platform ?? 'gmail';
   const escaped = t.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const bodyHtml = t.html ?? `<p>${escaped}</p>`;
   return {
     id: `e2e-${i}-${t.keyword}`,
-    platform: 'gmail',
+    platform,
     name: `E2E ${t.keyword}`,
     keyword: t.keyword,
     tags: ['e2e'],
-    bodyHtml: `<p>${escaped}</p>`,
+    bodyHtml,
     bodyAst: [{ t: 'p', c: [{ t: '#text', v: t.text }] }],
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -37,6 +41,87 @@ function toStoredTemplate(t: E2eTemplate, i: number) {
   };
 }
 
+export async function setExtensionTemplates(
+  context: BrowserContext,
+  platform: 'gmail' | 'teams' | 'chat',
+  list: E2eTemplate[]
+) {
+  const page = await context.newPage();
+  try {
+    const stored = await page.evaluate(
+      ({ platform, list }) => {
+        const parser = new DOMParser();
+        return list.map((t, idx) => {
+          const bodyHtml = t.html ?? `<p>${t.text}</p>`;
+          const doc = parser.parseFromString(bodyHtml, 'text/html');
+          function domToAst(node: Node): any[] {
+            if (node.nodeType === Node.TEXT_NODE) {
+              return [{ t: '#text', v: node.textContent ?? '' }];
+            }
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const el = node as Element;
+              const tag = el.tagName.toLowerCase();
+              const a: Record<string, string> = {};
+              for (let i = 0; i < el.attributes.length; i++) {
+                const attr = el.attributes.item(i);
+                if (attr) {
+                  a[attr.name] = attr.value;
+                }
+              }
+              const c: any[] = [];
+              for (let i = 0; i < el.childNodes.length; i++) {
+                const child = el.childNodes.item(i);
+                if (child) {
+                  c.push(...domToAst(child));
+                }
+              }
+              return [{ t: tag, ...(Object.keys(a).length > 0 ? { a } : {}), c }];
+            }
+            return [];
+          }
+          const ast: any[] = [];
+          for (let i = 0; i < doc.body.childNodes.length; i++) {
+            const child = doc.body.childNodes.item(i);
+            if (child) {
+              ast.push(...domToAst(child));
+            }
+          }
+          return {
+            id: `e2e-${idx}-${t.keyword}`,
+            platform,
+            name: `E2E ${t.keyword}`,
+            keyword: t.keyword,
+            tags: ['e2e'],
+            bodyHtml,
+            bodyAst: ast.length > 0 ? ast : [{ t: 'p', c: [{ t: '#text', v: t.text }] }],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            ...(t.to ? { to: t.to } : {}),
+            ...(t.cc ? { cc: t.cc } : {}),
+            ...(t.subject ? { subject: t.subject } : {}),
+            ...(t.aiPrompt ? { aiPrompt: t.aiPrompt } : {}),
+            ...(t.autoSubmitAi !== undefined ? { autoSubmitAi: t.autoSubmitAi } : {}),
+          };
+        });
+      },
+      { platform, list }
+    );
+
+    const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+    await worker.evaluate(
+      async ({ key, templates }) => {
+        const api = (globalThis as unknown as {
+          chrome: { storage: { local: { set(items: Record<string, unknown>): Promise<void> } } };
+        }).chrome;
+        await api.storage.local.set({ [key]: templates });
+      },
+      { key: `templates:${platform}`, templates: stored }
+    );
+  } finally {
+    await page.close();
+  }
+}
+
 export interface Compose {
   page: Page;
   dialog: Locator;
@@ -44,21 +129,36 @@ export interface Compose {
   subject: Locator;
   aiPromptBox: Locator;
   aiHelpBtn: Locator;
-  /** Returns true if Gemini (Help me write) is enabled and available in this Gmail compose window. */
   hasGemini(): Promise<boolean>;
-  /** Replaces every Gmail template in the extension's storage. */
   setTemplates(list: E2eTemplate[]): Promise<void>;
-  /** Types a keyword at the end of the body and presses Tab. */
   expand(keyword: string): Promise<void>;
-  /** Addresses currently shown as recipient chips anywhere in this compose window. */
   chipEmails(): Promise<string[]>;
-  /** Number of To recipients according to Gmail's own state (the input's aria-description). */
   toSelectedCount(): Promise<number>;
   addToRecipient(email: string): Promise<void>;
 }
 
+export interface TeamsPlayground {
+  page: Page;
+  editor: Locator;
+  logs: Locator;
+  setTemplates(list: E2eTemplate[]): Promise<void>;
+  expand(keyword: string): Promise<void>;
+}
+
+export interface ChatCompose {
+  page: Page;
+  editor: Locator;
+  setTemplates(list: E2eTemplate[]): Promise<void>;
+  expand(keyword: string): Promise<void>;
+  clear(): Promise<void>;
+}
+
 type WorkerFixtures = { ext: { context: BrowserContext; worker: Worker } };
-type TestFixtures = { compose: Compose };
+type TestFixtures = {
+  compose: Compose;
+  teamsPlayground: TeamsPlayground;
+  chatCompose: ChatCompose;
+};
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   ext: [
@@ -84,14 +184,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   compose: async ({ ext }, use) => {
     const setTemplates = async (list: E2eTemplate[]) => {
-      const stored = list.map(toStoredTemplate);
-      // Runs inside the extension's service worker, where `chrome` exists
-      await ext.worker.evaluate(async (templates) => {
-        const api = (globalThis as unknown as {
-          chrome: { storage: { local: { set(items: Record<string, unknown>): Promise<void> } } };
-        }).chrome;
-        await api.storage.local.set({ 'templates:gmail': templates });
-      }, stored);
+      await setExtensionTemplates(ext.context, 'gmail', list);
     };
     await setTemplates([]);
 
@@ -187,6 +280,122 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     if (await discard.isVisible().catch(() => false)) {
       await discard.click().catch(() => {});
     }
+    await setTemplates([]);
+    await page.close();
+  },
+
+  teamsPlayground: async ({ ext }, use) => {
+    const extensionId = new URL(ext.worker.url()).host;
+    const page = await ext.context.newPage();
+    page.on('console', (msg) => {
+      console.log(`  [playground ${msg.type()}] ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+      console.log(`  [playground err] ${err.message}`);
+    });
+
+    await page.goto(`chrome-extension://${extensionId}/playground.html`);
+    const editor = page.locator('#editor-teams');
+    await editor.waitFor({ state: 'visible', timeout: 15_000 });
+    const logs = page.locator('#logs-container');
+
+    const setTemplates = async (list: E2eTemplate[]) => {
+      await setExtensionTemplates(ext.context, 'teams', list);
+    };
+    await setTemplates([]);
+
+    const tp: TeamsPlayground = {
+      page,
+      editor,
+      logs,
+      setTemplates,
+      async expand(keyword) {
+        await editor.click();
+        await page.waitForTimeout(100);
+        await page.keyboard.press('Control+End');
+        await page.keyboard.type(keyword);
+        await page.waitForTimeout(50);
+        await page.keyboard.press('Tab');
+      },
+    };
+
+    await use(tp);
+    await setTemplates([]);
+    await page.close();
+  },
+
+  chatCompose: async ({ ext }, use) => {
+    const setTemplates = async (list: E2eTemplate[]) => {
+      await setExtensionTemplates(ext.context, 'chat', list);
+    };
+    await setTemplates([]);
+
+    const page = await ext.context.newPage();
+    page.on('console', (msg) => {
+      console.log(`  [chat ${msg.type()}] ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => {
+      console.log(`  [chat err] ${err.message}`);
+    });
+
+    await page.goto('https://chat.google.com/', { waitUntil: 'domcontentloaded' });
+    if (page.url().includes('accounts.google.com')) {
+      throw new Error('Not signed in to Google Chat. Run "npm run e2e:login" and sign in with a test account.');
+    }
+
+    const editor = page
+      .locator(
+        'div[contenteditable="true"][role="textbox"][jsname="yrriRe"], ' +
+          'div.hj99tb[contenteditable="true"][role="textbox"], ' +
+          'div[contenteditable="true"][role="textbox"][g_editable="true"], ' +
+          'div[contenteditable="true"][role="textbox"][aria-multiline="true"], ' +
+          'div.editable[contenteditable="true"][role="textbox"], ' +
+          'div[contenteditable="true"][role="textbox"]'
+      )
+      .first();
+
+    // エディタが表示されていない場合、会話リスト（備忘録または任意の会話）をクリックして開く
+    if (!(await editor.isVisible().catch(() => false))) {
+      const memo = page.locator('text="備忘録"').first();
+      try {
+        await memo.waitFor({ state: 'visible', timeout: 15_000 });
+        await memo.click();
+      } catch {
+        const anyConv = page.locator('div[role="row"], div[role="listitem"]').first();
+        if (await anyConv.isVisible({ timeout: 5000 }).catch(() => false)) {
+          await anyConv.click();
+        }
+      }
+    }
+
+    await editor.waitFor({ state: 'visible', timeout: 30_000 });
+
+    const chat: ChatCompose = {
+      page,
+      editor,
+      setTemplates,
+      async expand(keyword) {
+        await this.clear();
+        await editor.click();
+        await page.waitForTimeout(100);
+        await page.keyboard.type(keyword);
+        await page.waitForTimeout(100);
+        await page.keyboard.press('Tab');
+      },
+      async clear() {
+        await editor.click();
+        await page.waitForTimeout(100);
+        await page.keyboard.press('Control+a');
+        await page.keyboard.press('Backspace');
+        await page.waitForTimeout(100);
+      },
+    };
+
+    // 開始前に既存の下書きを完全に消去
+    await chat.clear();
+
+    await use(chat);
+    await chat.clear().catch(() => {});
     await setTemplates([]);
     await page.close();
   },

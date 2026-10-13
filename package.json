@@ -14,6 +14,9 @@
     "test:watch": "vitest",
     "e2e:login": "node e2e/login.mjs",
     "e2e": "wxt build && playwright test -c e2e/playwright.config.ts",
+    "e2e:chat": "wxt build && playwright test e2e/chat.spec.ts -c e2e/playwright.config.ts",
+    "e2e:teams": "wxt build && playwright test e2e/teams.spec.ts -c e2e/playwright.config.ts",
+    "e2e:gmail": "wxt build && playwright test e2e/gmail.spec.ts -c e2e/playwright.config.ts",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
