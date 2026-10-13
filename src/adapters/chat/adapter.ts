@@ -27,7 +27,7 @@ export const chatAdapter: PlatformAdapter = {
       if (matchesAny(el, SEL.body)) {
         // Disambiguation with Gmail compose window:
         // If it's inside Gmail compose dialog (.M9 / table.aoI) and has Gmail body class, let GmailAdapter handle it
-        if (el.classList.contains('Am') && el.closest('.M9, table.aoI')) {
+        if (el.classList.contains(SEL.gmailBodyClass) && el.closest(SEL.gmailComposeDialog.join(', '))) {
           return null;
         }
 
@@ -42,7 +42,7 @@ export const chatAdapter: PlatformAdapter = {
       if (matchesAny(el, SEL.container)) {
         const innerEditor = q<HTMLElement>(el, SEL.body);
         if (innerEditor && (innerEditor.isContentEditable || innerEditor.getAttribute('contenteditable') === 'true')) {
-          if (!(innerEditor.classList.contains('Am') && innerEditor.closest('.M9, table.aoI'))) {
+          if (!(innerEditor.classList.contains(SEL.gmailBodyClass) && innerEditor.closest(SEL.gmailComposeDialog.join(', ')))) {
             return innerEditor;
           }
         }

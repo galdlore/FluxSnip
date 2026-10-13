@@ -266,4 +266,50 @@ describe('backup module', () => {
     expect(current.find((i) => i.id === 'item-1')?.name).toBe('Updated Name');
     expect(current.find((i) => i.id === 'item-2')?.name).toBe('New Item');
   });
+
+  it('rejects replace mode when incoming backup contains 0 valid templates', async () => {
+    const preview = parseImport(
+      JSON.stringify({
+        app: 'FluxSnip',
+        templates: {
+          gmail: [],
+          teams: [],
+          chat: [],
+        },
+      })
+    );
+
+    await expect(applyImport(preview, 'replace', false)).rejects.toThrow(
+      'Cannot replace templates: backup file contains 0 valid templates.'
+    );
+  });
+
+  it('extracts sensitive items (bcc, from, autoSubmitAi) in parseImport', () => {
+    const preview = parseImport(
+      JSON.stringify({
+        app: 'FluxSnip',
+        templates: {
+          gmail: [
+            {
+              id: 'g-sensitive',
+              name: 'Sensitive Gmail',
+              keyword: ';sens',
+              bodyHtml: '<p>Hi</p>',
+              bcc: { mode: 'replace', emails: ['secret@example.com'] },
+              from: 'alias@example.com',
+              autoSubmitAi: true,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(preview.sensitiveItems).toHaveLength(3);
+    const types = preview.sensitiveItems.map((s) => s.type);
+    expect(types).toContain('bcc');
+    expect(types).toContain('from');
+    expect(types).toContain('autoSubmitAi');
+    const bccItem = preview.sensitiveItems.find((s) => s.type === 'bcc');
+    expect(bccItem?.detail).toBe('secret@example.com');
+  });
 });

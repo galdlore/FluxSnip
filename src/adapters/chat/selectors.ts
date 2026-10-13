@@ -46,6 +46,12 @@ export const SEL = {
     'div[role="combobox"]',
     'header input',
   ],
+
+  /**
+   * Gmail compose dialog elements and body class to distinguish embedded Chat from Gmail compose.
+   */
+  gmailComposeDialog: ['.M9', 'table.aoI'],
+  gmailBodyClass: 'Am',
 } as const;
 
 /**

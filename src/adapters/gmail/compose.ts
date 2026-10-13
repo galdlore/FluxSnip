@@ -65,9 +65,7 @@ export function findGmailBody(node: Node | null): HTMLElement | null {
 
       // Inline reply fallback: check if it's within a mail content wrapper and has role="textbox"
       if (curr.getAttribute('role') === 'textbox' && curr.getAttribute('contenteditable') === 'true') {
-        const hasQuoteOrSend = curr.parentElement?.querySelector(
-          '.gmail_quote, [aria-label*="送信"], [aria-label*="Send"], [data-tooltip*="送信"]'
-        );
+        const hasQuoteOrSend = curr.parentElement ? q(curr.parentElement, SEL.inlineReplyIndicators) : null;
         if (hasQuoteOrSend || curr.closest('div[role="main"]')) {
           return curr as HTMLElement;
         }
@@ -102,7 +100,6 @@ export function isAiPromptBox(element: Element | null): boolean {
   return matchesAny(element, SEL.aiPromptBox);
 }
 
-const AI_PANEL_BOUNDARY = '.YfAtle, .idpN8c, [role="dialog"]';
 const AI_SUBMIT_SEARCH_DEPTH = 5;
 
 /**
@@ -114,7 +111,7 @@ function findAiSubmitButton(promptBox: HTMLElement): HTMLElement | null {
   for (let depth = 0; el && depth < AI_SUBMIT_SEARCH_DEPTH; depth++) {
     const btn = q<HTMLElement>(el, SEL.aiSubmitBtn);
     if (btn) return btn;
-    if (el.matches(AI_PANEL_BOUNDARY)) break;
+    if (matchesAny(el, SEL.aiPanelBoundary)) break;
     el = el.parentElement;
   }
   return null;

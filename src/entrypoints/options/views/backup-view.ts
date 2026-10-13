@@ -140,6 +140,14 @@ export function createBackupView(): HTMLElement {
     `;
     previewBox.appendChild(summary);
 
+    const totalTemplates = currentPreview.counts.gmail + currentPreview.counts.teams + currentPreview.counts.chat;
+    if (totalTemplates === 0) {
+      const emptyWarning = document.createElement('div');
+      emptyWarning.className = 'preview-empty-warning';
+      emptyWarning.textContent = t('options_import_no_templates');
+      previewBox.appendChild(emptyWarning);
+    }
+
     if (currentPreview.errors.length > 0) {
       const errBox = document.createElement('div');
       errBox.className = 'preview-errors';
@@ -155,6 +163,30 @@ export function createBackupView(): HTMLElement {
       errBox.appendChild(errTitle);
       errBox.appendChild(errList);
       previewBox.appendChild(errBox);
+    }
+
+    if (currentPreview.sensitiveItems && currentPreview.sensitiveItems.length > 0) {
+      const sensitiveBox = document.createElement('div');
+      sensitiveBox.className = 'preview-sensitive-box';
+      const sensitiveTitle = document.createElement('strong');
+      sensitiveTitle.textContent = `${t('options_import_sensitive_notice')}:`;
+      const sensitiveList = document.createElement('ul');
+      for (const item of currentPreview.sensitiveItems) {
+        const li = document.createElement('li');
+        let desc = '';
+        if (item.type === 'bcc') {
+          desc = t('options_import_sensitive_bcc', item.detail);
+        } else if (item.type === 'from') {
+          desc = t('options_import_sensitive_from', item.detail);
+        } else if (item.type === 'autoSubmitAi') {
+          desc = t('options_import_sensitive_ai');
+        }
+        li.textContent = `[${item.templateName || item.keyword}] ${desc}`;
+        sensitiveList.appendChild(li);
+      }
+      sensitiveBox.appendChild(sensitiveTitle);
+      sensitiveBox.appendChild(sensitiveList);
+      previewBox.appendChild(sensitiveBox);
     }
 
     const optionsRow = document.createElement('div');
@@ -184,6 +216,10 @@ export function createBackupView(): HTMLElement {
     executeBtn.id = 'execute-import-btn';
     executeBtn.className = 'btn btn-primary';
     executeBtn.textContent = t('options_execute_import');
+    if (totalTemplates === 0 && !currentPreview.settings) {
+      executeBtn.disabled = true;
+    }
+
     executeBtn.onclick = async () => {
       if (!currentPreview) return;
       const preview = currentPreview;
@@ -191,6 +227,11 @@ export function createBackupView(): HTMLElement {
       const includeSettings = settingsCheckbox.checked;
 
       if (mode === 'replace') {
+        if (totalTemplates === 0) {
+          showToast(t('options_import_cannot_replace_empty'), 'error');
+          return;
+        }
+
         const confirmed = await confirmModal(
           t('options_import_replace_confirm_title'),
           t('options_import_replace_confirm_msg'),

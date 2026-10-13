@@ -14,6 +14,13 @@ const BLOCK_TAGS = new Set([
   'blockquote', 'pre', 'table', 'tr', 'li', 'ul', 'ol', 'hr',
 ]);
 
+export const ALLOWED_TAGS = new Set([
+  'p', 'div', 'span', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike',
+  'del', 'a', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tfoot', 'tr',
+  'th', 'td', 'caption', 'colgroup', 'col', 'h1', 'h2', 'h3', 'h4', 'h5',
+  'h6', 'blockquote', 'pre', 'code', 'hr', 'img', 'font', 'sub', 'sup',
+]);
+
 const ALLOWED_URL_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:'];
 
 export function escapeHtml(str: string): string {
@@ -38,10 +45,24 @@ export function astToHtml(nodes: AstNode[]): string {
       out += escapeHtml(node.v);
     } else {
       const tag = node.t.toLowerCase();
+      if (!ALLOWED_TAGS.has(tag)) {
+        if (node.c && node.c.length > 0) {
+          out += astToHtml(node.c);
+        }
+        continue;
+      }
       out += `<${tag}`;
       if (node.a) {
         for (const [k, v] of Object.entries(node.a)) {
-          out += ` ${k.toLowerCase()}="${escapeAttr(String(v))}"`;
+          const lowerK = k.toLowerCase();
+          if (lowerK.startsWith('on')) continue;
+          if (tag === 'a' && lowerK === 'href' && !isSafeUrl(String(v))) continue;
+          if (tag === 'img' && lowerK === 'src') {
+            const lowerVal = String(v).trim().toLowerCase();
+            const isSafeImg = lowerVal.startsWith('https:') || /^data:image\/(png|jpeg|gif|webp);base64,/i.test(String(v).trim());
+            if (!isSafeImg) continue;
+          }
+          out += ` ${lowerK}="${escapeAttr(String(v))}"`;
         }
       }
       if (VOID_TAGS.has(tag)) {
@@ -478,6 +499,17 @@ function renderNodeToChatHtml(node: AstNode, ctx: ChatHtmlContext): string {
   }
 
   // 7. General elements
+  if (!ALLOWED_TAGS.has(tag)) {
+    if (node.c) {
+      let inner = '';
+      for (const child of node.c) {
+        inner += renderNodeToChatHtml(child, ctx);
+      }
+      return inner;
+    }
+    return '';
+  }
+
   let attrStr = '';
   if (node.a) {
     for (const [k, v] of Object.entries(node.a)) {
@@ -485,6 +517,11 @@ function renderNodeToChatHtml(node: AstNode, ctx: ChatHtmlContext): string {
       if (lowerK.startsWith('on')) continue;
       if (tag === 'a' && lowerK === 'href') {
         if (!isSafeUrl(String(v))) continue;
+      }
+      if (tag === 'img' && lowerK === 'src') {
+        const lowerVal = String(v).trim().toLowerCase();
+        const isSafeImg = lowerVal.startsWith('https:') || /^data:image\/(png|jpeg|gif|webp);base64,/i.test(String(v).trim());
+        if (!isSafeImg) continue;
       }
       attrStr += ` ${lowerK}="${escapeAttr(String(v))}"`;
     }
@@ -536,6 +573,20 @@ export function astToDom(nodes: AstNode[], doc: Document = typeof document !== '
     }
 
     const tag = n.t.toLowerCase();
+    if (!ALLOWED_TAGS.has(tag)) {
+      if (n.c) {
+        const subFrag = doc.createDocumentFragment();
+        for (const child of n.c) {
+          const childNode = buildNode(child);
+          if (childNode) {
+            subFrag.appendChild(childNode);
+          }
+        }
+        return subFrag;
+      }
+      return null;
+    }
+
     const el = doc.createElement(tag);
 
     if (n.a) {

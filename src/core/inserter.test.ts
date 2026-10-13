@@ -313,4 +313,104 @@ describe('inserter insertContent', () => {
     expect(editor.textContent).toContain('Inserted bold');
     expect(inputFired).toBe(true);
   });
+
+  it('places cursor correctly relative to inserted content when editor already has existing text', async () => {
+    editor.textContent = 'Existing prefix ';
+    const textNode = editor.firstChild as Text;
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      const range = document.createRange();
+      range.setStart(textNode, textNode.data.length);
+      range.collapse(true);
+      sel.addRange(range);
+    }
+
+    const cursorContent: RenderedContent = {
+      html: 'Hello World',
+      text: 'Hello World',
+      chatText: 'Hello World',
+      chatHtml: 'Hello World',
+      ast: [
+        {
+          t: 'p',
+          c: [
+            { t: '#text', v: 'Hello ' },
+            { t: '#text', v: CURSOR_MARK },
+            { t: '#text', v: 'World' },
+          ],
+        },
+      ],
+    };
+
+    document.execCommand = vi.fn((cmd: string, _showUI: boolean, val?: string) => {
+      if (cmd === 'insertText' && val) {
+        editor.textContent += val;
+        // Mock browser caret landing at the end of inserted content
+        const lastNode = editor.lastChild as Text;
+        const r = document.createRange();
+        r.setStart(lastNode, lastNode.data.length);
+        r.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(r);
+        return true;
+      }
+      return false;
+    });
+
+    const result = await insertContent(editor, cursorContent, ['insertText'], false, true);
+    expect(result.ok).toBe(true);
+
+    const caretRange = sel?.getRangeAt(0);
+    // Cursor mark is after 'Hello ' (6 chars). 'World' is 5 chars.
+    // In 'Existing prefix Hello World', offset should be at 16 + 6 = 22.
+    const head = document.createRange();
+    head.selectNodeContents(editor);
+    if (caretRange) {
+      head.setEnd(caretRange.endContainer, caretRange.endOffset);
+    }
+    expect(head.toString()).toBe('Existing prefix Hello ');
+  });
+
+  it('does not duplicate text when multiline insertText partially succeeds', async () => {
+    let callCount = 0;
+    document.execCommand = vi.fn((cmd: string, _showUI: boolean, val?: string) => {
+      if (cmd === 'insertText' && val) {
+        editor.textContent += val;
+        callCount++;
+        // Simulate partial success (first line succeeds, but function overall returned false or threw)
+        return false;
+      }
+      return false;
+    });
+
+    const multilineContent: RenderedContent = {
+      html: 'Line1\nLine2',
+      text: 'Line1\nLine2',
+      chatText: 'Line1\nLine2',
+      chatHtml: 'Line1<br>Line2',
+      ast: [{ t: '#text', v: 'Line1\nLine2' }],
+    };
+
+    const result = await insertContent(editor, multilineContent, ['insertText'], false, true);
+    expect(result.ok).toBe(true);
+    // Because editor text changed, the plain fallback must NOT insert another full copy
+    expect(editor.textContent).not.toBe('Initial textLine1Line1\nLine2');
+  });
+
+  it('preserves selection without deleting contents if clipboard write fails', async () => {
+    const sel = window.getSelection();
+    const originalText = editor.textContent;
+
+    // Mock clipboard.write to fail
+    Object.assign(navigator, {
+      clipboard: {
+        write: vi.fn().mockRejectedValue(new Error('Permission denied')),
+      },
+    });
+
+    const result = await insertContent(editor, mockContent, ['clipboard'], false);
+    expect(result.ok).toBe(false);
+    expect(editor.textContent).toBe(originalText);
+  });
 });

@@ -107,4 +107,28 @@ describe('expander tryExpand', () => {
     expect(result).toBeNull();
     editor.remove();
   });
+
+  it('returns null when caret is at offset 0 of element preceding a keyword', () => {
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    const p = document.createElement('p');
+    p.textContent = ';thx';
+    editor.appendChild(p);
+    document.body.appendChild(editor);
+
+    // Caret at the beginning of the <p> element (offset 0)
+    const range = document.createRange();
+    range.setStart(p, 0);
+    range.collapse(true);
+
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+
+    const ev = new KeyboardEvent('keydown', { key: 'Tab' });
+    const result = tryExpand(ev, dummyAdapter, editor, templates);
+
+    expect(result).toBeNull();
+    editor.remove();
+  });
 });

@@ -195,7 +195,7 @@ export const gmailAdapter: PlatformAdapter = {
         // Check if Gemini prompt box or help panel is already open to avoid toggling it closed
         const isAlreadyOpen =
           Boolean(promptBox && (promptBox.isContentEditable || promptBox.getAttribute('contenteditable') === 'true')) ||
-          Boolean(sdtBtn && (sdtBtn.getAttribute('aria-expanded') === 'true' || sdtBtn.classList.contains('J-Z-I-Jp')));
+          Boolean(sdtBtn && (sdtBtn.getAttribute('aria-expanded') === 'true' || sdtBtn.classList.contains(SEL.aiHelpBtnActiveClass)));
 
         if (!isAlreadyOpen) {
           // If formatting options toolbar or popup is active, dismiss it first

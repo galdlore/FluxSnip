@@ -123,54 +123,24 @@ function findCursorMarkOffset(ast: AstNode[], useChatText: boolean): number | nu
   return idx >= 0 ? idx : null;
 }
 
-function setCaretPosition(editor: HTMLElement, targetOffset: number): void {
-  const doc = editor.ownerDocument || document;
-  const win = doc.defaultView || window;
+function applyCursorPlacement(editor: HTMLElement, plainTextLen: number, cursorOffset: number | null): void {
+  if (cursorOffset === null || cursorOffset < 0) return;
+  const charsBack = plainTextLen - cursorOffset;
+  if (charsBack < 0) return;
 
   if (editor instanceof HTMLInputElement || editor instanceof HTMLTextAreaElement) {
     try {
       editor.focus();
-      editor.setSelectionRange(targetOffset, targetOffset);
+      const current = editor.selectionEnd ?? editor.value.length;
+      const target = Math.max(0, current - charsBack);
+      editor.setSelectionRange(target, target);
       return;
     } catch {
       // Ignore
     }
   }
 
-  try {
-    editor.focus();
-    const sel = win.getSelection();
-    if (!sel) return;
-
-    const walker = doc.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-    let currentOffset = 0;
-    let targetNode: Text | null = null;
-    let nodeOffset = 0;
-
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      const textNode = n as Text;
-      const len = textNode.data.length;
-      if (currentOffset + len >= targetOffset) {
-        targetNode = textNode;
-        nodeOffset = targetOffset - currentOffset;
-        break;
-      }
-      currentOffset += len;
-    }
-
-    const range = doc.createRange();
-    if (targetNode) {
-      range.setStart(targetNode, nodeOffset);
-      range.collapse(true);
-    } else {
-      range.selectNodeContents(editor);
-      range.collapse(false);
-    }
-    sel.removeAllRanges();
-    sel.addRange(range);
-  } catch {
-    // Ignore selection error
-  }
+  moveCaretBack(editor, charsBack);
 }
 
 /**
@@ -193,7 +163,8 @@ export async function insertContent(
   for (const method of order) {
     try {
       if (method === 'html') {
-        if (isPlain) continue;        const sel = win.getSelection();
+        if (isPlain) continue;
+        const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
         const charsAfterMark = countTextAfterCursorMark(astToDom(content.ast, doc), doc);
@@ -337,18 +308,15 @@ export async function insertContent(
 
         await sleep(30);
 
-        if (cursorOffset !== null && cursorOffset >= 0) {
-          setCaretPosition(editor, cursorOffset);
-        }
-
         const afterText = editor.innerText || editor.textContent || '';
-        if (success && beforeText !== afterText) {
+        if ((success || afterText !== beforeText) && beforeText !== afterText) {
+          applyCursorPlacement(editor, plainText.length, cursorOffset);
           return { ok: true, method: 'insertText' };
         }
 
         // Direct plain-text DOM insertion fallback for contenteditable prompt boxes (e.g. Gemini)
         // when execCommand('insertText') is prevented or leaves text unchanged
-        if (isPlain) {
+        if (isPlain && beforeText === afterText) {
           const sel = win.getSelection();
           let range: Range | null = null;
           if (sel && sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
@@ -370,9 +338,7 @@ export async function insertContent(
             sel.addRange(range);
           }
 
-          if (cursorOffset !== null && cursorOffset >= 0) {
-            setCaretPosition(editor, cursorOffset);
-          }
+          applyCursorPlacement(editor, plainText.length, cursorOffset);
 
           dispatchInput(editor, 'insertText');
           return { ok: true, method: 'insertText' };
@@ -380,12 +346,6 @@ export async function insertContent(
       }
 
       if (method === 'clipboard') {
-        // Delete current selection / token range first
-        const sel = win.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          sel.getRangeAt(0).deleteContents();
-        }
-
         const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
         const textBlob = new Blob([plainText], { type: 'text/plain' });
 
@@ -395,6 +355,12 @@ export async function insertContent(
             'text/plain': textBlob,
           }),
         ]);
+
+        // Delete current selection / token range only after clipboard write succeeds
+        const sel = win.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          sel.getRangeAt(0).deleteContents();
+        }
 
         showToast(tOr('toast_clipboard_ready', 'Copied to clipboard. Press Ctrl+V to paste.'), 'info');
         return { ok: true, method: 'clipboard' };

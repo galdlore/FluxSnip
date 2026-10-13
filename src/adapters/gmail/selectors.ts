@@ -59,6 +59,11 @@ export const SEL = {
   ],
 
   /**
+   * Class name applied when Gemini Help me write button is active/pressed.
+   */
+  aiHelpBtnActiveClass: 'J-Z-I-Jp',
+
+  /**
    * Gemini prompt submission button (作成 / Create / 送信 / Send).
    */
   aiSubmitBtn: [
@@ -71,6 +76,22 @@ export const SEL = {
     'div[role="button"][aria-label*="送信"]',
     'div[role="button"][aria-label*="Send"]',
     'button[type="submit"]',
+  ],
+
+  /**
+   * Boundaries of Gemini AI panel/dialog in compose.
+   */
+  aiPanelBoundary: ['.YfAtle', '.idpN8c', '[role="dialog"]'],
+
+  /**
+   * Indicator elements for inline reply form.
+   */
+  inlineReplyIndicators: [
+    '.gmail_quote',
+    '[aria-label*="送信"]',
+    '[aria-label*="Send"]',
+    '[data-tooltip*="送信"]',
+    '[data-tooltip*="Send"]',
   ],
 
   /**

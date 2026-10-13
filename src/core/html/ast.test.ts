@@ -194,6 +194,35 @@ describe('ast serializers', () => {
     expect(secondLink?.getAttribute('href')).toBe('https://example.com');
   });
 
+  it('astToHtml and astToDom enforce tag allowlist for defense in depth', () => {
+    const maliciousAst: AstNode[] = [
+      {
+        t: 'script',
+        a: { src: 'https://evil.com/xss.js' },
+        c: [{ t: '#text', v: 'alert(1)' }],
+      },
+      {
+        t: 'iframe',
+        a: { src: 'https://evil.com' },
+      },
+      {
+        t: 'p',
+        c: [{ t: '#text', v: 'Safe paragraph' }],
+      },
+    ];
+
+    expect(astToHtml(maliciousAst)).toBe('alert(1)<p>Safe paragraph</p>');
+
+    const frag = astToDom(maliciousAst, document);
+    const div = document.createElement('div');
+    div.appendChild(frag);
+
+    expect(div.querySelector('script')).toBeNull();
+    expect(div.querySelector('iframe')).toBeNull();
+    expect(div.querySelector('p')?.textContent).toBe('Safe paragraph');
+    expect(div.textContent).toContain('alert(1)');
+  });
+
   describe('astToChatHtml', () => {
     it('converts <ol> into numbered <div> blocks while preserving inline styling', () => {
       const ast: AstNode[] = [

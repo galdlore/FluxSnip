@@ -91,4 +91,20 @@ describe('storage module', () => {
     const deduped = await getKnownFromAddresses();
     expect(deduped[deduped.length - 1]).toBe('new@example.com');
   });
+
+  it('serializes concurrent addKnownFromAddresses calls without losing updates', async () => {
+    await browser.storage.local.clear();
+    // Concurrent writes
+    await Promise.all([
+      addKnownFromAddresses(['a@example.com']),
+      addKnownFromAddresses(['b@example.com']),
+      addKnownFromAddresses(['c@example.com']),
+    ]);
+
+    const result = await getKnownFromAddresses();
+    expect(result).toHaveLength(3);
+    expect(result).toContain('a@example.com');
+    expect(result).toContain('b@example.com');
+    expect(result).toContain('c@example.com');
+  });
 });

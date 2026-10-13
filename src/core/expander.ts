@@ -10,8 +10,12 @@ function findPrecedingTextNode(container: Node, offset: number): { node: Text; o
     return { node: container as Text, offset };
   }
 
-  // If container is an Element, inspect childNodes up to offset
-  const child = offset > 0 ? container.childNodes[offset - 1] : container.firstChild;
+  // If container is an Element and offset is 0, caret is at the start of container; no preceding child exists
+  if (offset <= 0) {
+    return null;
+  }
+
+  const child = container.childNodes[offset - 1];
   if (!child) return null;
 
   return findDeepestRightmostTextNode(child);

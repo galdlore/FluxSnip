@@ -12,7 +12,7 @@ import {
 import { sanitizeHtmlToAst } from './html/sanitize';
 import { astToHtml } from './html/ast';
 import { parseEmailList, validateTemplate } from './validate';
-import { getTemplates, replaceTemplates, saveSettings } from './storage';
+import { getTemplates, setTemplatesBatch } from './storage';
 
 export interface ExportData {
   app: string;
@@ -133,15 +133,24 @@ function parseGmailFields(item: Record<string, unknown>): { fields: Partial<Gmai
   return { fields, problems };
 }
 
+export interface SensitiveItem {
+  templateName: string;
+  keyword: string;
+  type: 'bcc' | 'from' | 'autoSubmitAi';
+  detail: string;
+}
+
 export interface ImportPreview {
   counts: Record<Platform, number>;
   errors: string[];
   data: Record<Platform, Template[]>;
   settings?: Settings;
+  sensitiveItems: SensitiveItem[];
 }
 
 export function parseImport(json: string): ImportPreview {
   const errors: string[] = [];
+  const sensitiveItems: SensitiveItem[] = [];
   const resultData: Record<Platform, Template[]> = {
     gmail: [],
     teams: [],
@@ -157,6 +166,7 @@ export function parseImport(json: string): ImportPreview {
       counts: { gmail: 0, teams: 0, chat: 0 },
       errors: [`Invalid JSON: ${err?.message || 'Parse error'}`],
       data: resultData,
+      sensitiveItems,
     };
   }
 
@@ -165,6 +175,7 @@ export function parseImport(json: string): ImportPreview {
       counts: { gmail: 0, teams: 0, chat: 0 },
       errors: ['Invalid backup: Root is not an object'],
       data: resultData,
+      sensitiveItems,
     };
   }
 
@@ -173,6 +184,7 @@ export function parseImport(json: string): ImportPreview {
       counts: { gmail: 0, teams: 0, chat: 0 },
       errors: [`Unsupported application backup: expected FluxSnip, got ${raw.app}`],
       data: resultData,
+      sensitiveItems,
     };
   }
 
@@ -250,6 +262,33 @@ export function parseImport(json: string): ImportPreview {
           continue;
         }
 
+        if (platform === 'gmail') {
+          if (gmailFields.bcc && gmailFields.bcc.emails && gmailFields.bcc.emails.length > 0) {
+            sensitiveItems.push({
+              templateName: name,
+              keyword,
+              type: 'bcc',
+              detail: gmailFields.bcc.emails.join(', '),
+            });
+          }
+          if (gmailFields.from) {
+            sensitiveItems.push({
+              templateName: name,
+              keyword,
+              type: 'from',
+              detail: gmailFields.from,
+            });
+          }
+          if (gmailFields.autoSubmitAi) {
+            sensitiveItems.push({
+              templateName: name,
+              keyword,
+              type: 'autoSubmitAi',
+              detail: '',
+            });
+          }
+        }
+
         seenIds.add(id);
         resultData[platform].push(reconstructed);
       } catch (err: any) {
@@ -267,6 +306,7 @@ export function parseImport(json: string): ImportPreview {
     errors,
     data: resultData,
     settings,
+    sensitiveItems,
   };
 }
 
@@ -277,29 +317,34 @@ export async function applyImport(
   mode: ImportMode,
   includeSettings: boolean
 ): Promise<{ added: number; updated: number; skipped: number }> {
+  const totalIncoming =
+    p.data.gmail.length + p.data.teams.length + p.data.chat.length;
+
+  if (mode === 'replace' && totalIncoming === 0) {
+    throw new Error('Cannot replace templates: backup file contains 0 valid templates.');
+  }
+
   let added = 0;
   let updated = 0;
   let skipped = 0;
 
+  const targetUpdates: Record<Platform, Template[]> = {
+    gmail: [],
+    teams: [],
+    chat: [],
+  };
+
   for (const platform of PLATFORMS) {
     const importItems = p.data[platform];
-    if (!importItems || importItems.length === 0) {
-      if (mode === 'replace') {
-        // If replace mode, empty array clears it
-        await replaceTemplates(platform, []);
-      }
-      continue;
-    }
-
     if (mode === 'replace') {
-      await replaceTemplates(platform, importItems);
-      added += importItems.length;
+      targetUpdates[platform] = importItems || [];
+      added += (importItems || []).length;
     } else {
       // Merge mode
       const current = await getTemplates(platform);
       const currentMap = new Map(current.map((item) => [item.id, item]));
 
-      for (const item of importItems) {
+      for (const item of (importItems || [])) {
         const existing = currentMap.get(item.id);
         const keywordTaken = Array.from(currentMap.values()).some(
           (other) => other.id !== item.id && other.keyword === item.keyword
@@ -319,13 +364,12 @@ export async function applyImport(
         }
       }
 
-      await replaceTemplates(platform, Array.from(currentMap.values()));
+      targetUpdates[platform] = Array.from(currentMap.values());
     }
   }
 
-  if (includeSettings && p.settings) {
-    await saveSettings(p.settings);
-  }
+  // Atomically save all platforms and settings in a single storage call
+  await setTemplatesBatch(targetUpdates, includeSettings ? p.settings : undefined);
 
   return { added, updated, skipped };
 }

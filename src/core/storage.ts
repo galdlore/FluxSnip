@@ -31,37 +31,67 @@ export async function getTemplates<P extends Platform>(
   return list as Extract<Template, { platform: P }>[];
 }
 
+let storageLockChain: Promise<unknown> = Promise.resolve();
+
+function withStorageLock<T>(task: () => Promise<T>): Promise<T> {
+  const next = storageLockChain.then(task, task);
+  storageLockChain = next.catch(() => {});
+  return next;
+}
+
 export async function saveTemplate(t: Template): Promise<void> {
-  const key = getPlatformKey(t.platform);
-  const current = await getTemplates(t.platform);
-  const now = Date.now();
-  const updatedItem = {
-    ...t,
-    updatedAt: now,
-  };
+  return withStorageLock(async () => {
+    const key = getPlatformKey(t.platform);
+    const current = await getTemplates(t.platform);
+    const now = Date.now();
+    const updatedItem = {
+      ...t,
+      updatedAt: now,
+    };
 
-  const index = current.findIndex((item) => item.id === t.id);
-  let nextList: Template[];
-  if (index >= 0) {
-    nextList = [...current];
-    nextList[index] = updatedItem;
-  } else {
-    nextList = [...current, updatedItem];
-  }
+    const index = current.findIndex((item) => item.id === t.id);
+    let nextList: Template[];
+    if (index >= 0) {
+      nextList = [...current];
+      nextList[index] = updatedItem;
+    } else {
+      nextList = [...current, updatedItem];
+    }
 
-  await browser.storage.local.set({ [key]: nextList });
+    await browser.storage.local.set({ [key]: nextList });
+  });
 }
 
 export async function deleteTemplate(platform: Platform, id: string): Promise<void> {
-  const key = getPlatformKey(platform);
-  const current = await getTemplates(platform);
-  const nextList = current.filter((item) => item.id !== id);
-  await browser.storage.local.set({ [key]: nextList });
+  return withStorageLock(async () => {
+    const key = getPlatformKey(platform);
+    const current = await getTemplates(platform);
+    const nextList = current.filter((item) => item.id !== id);
+    await browser.storage.local.set({ [key]: nextList });
+  });
 }
 
 export async function replaceTemplates(platform: Platform, list: Template[]): Promise<void> {
   const key = getPlatformKey(platform);
   await browser.storage.local.set({ [key]: list });
+}
+
+export async function setTemplatesBatch(
+  templatesByPlatform: Partial<Record<Platform, Template[]>>,
+  settings?: Settings
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  for (const [platform, list] of Object.entries(templatesByPlatform)) {
+    if (list) {
+      payload[getPlatformKey(platform as Platform)] = list;
+    }
+  }
+  if (settings) {
+    payload[STORAGE_KEYS.SETTINGS] = settings;
+  }
+  if (Object.keys(payload).length > 0) {
+    await browser.storage.local.set(payload);
+  }
 }
 
 function normalizeSettings(raw: Partial<Settings> | undefined): Settings {
@@ -122,23 +152,25 @@ export async function getKnownFromAddresses(): Promise<string[]> {
 
 export async function addKnownFromAddresses(emails: string[]): Promise<void> {
   if (!emails || emails.length === 0) return;
-  const current = await getKnownFromAddresses();
-  const set = new Set(current.map((e) => e.toLowerCase()));
-  const merged = [...current];
+  return withStorageLock(async () => {
+    const current = await getKnownFromAddresses();
+    const set = new Set(current.map((e) => e.toLowerCase()));
+    const merged = [...current];
 
-  for (const email of emails) {
-    const trimmed = email.trim();
-    if (!trimmed) continue;
-    const lower = trimmed.toLowerCase();
-    if (!set.has(lower)) {
-      set.add(lower);
-      merged.push(trimmed);
+    for (const email of emails) {
+      const trimmed = email.trim();
+      if (!trimmed) continue;
+      const lower = trimmed.toLowerCase();
+      if (!set.has(lower)) {
+        set.add(lower);
+        merged.push(trimmed);
+      }
     }
-  }
 
-  // Cap at 50 addresses
-  const capped = merged.slice(-50);
-  await browser.storage.local.set({ [STORAGE_KEYS.KNOWN_FROM]: capped });
+    // Cap at 50 addresses
+    const capped = merged.slice(-50);
+    await browser.storage.local.set({ [STORAGE_KEYS.KNOWN_FROM]: capped });
+  });
 }
 
 export function onTemplatesChanged(cb: (platform: Platform) => void): () => void {
