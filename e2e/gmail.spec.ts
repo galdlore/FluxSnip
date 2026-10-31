@@ -15,6 +15,20 @@ test('Tab expands the keyword into the body and removes the keyword', async ({ c
   await expect(compose.body).not.toContainText(';e2ebody');
 });
 
+test('Tab expands keyword (;lint) and removes it even when editor has existing text or signature', async ({ compose }) => {
+  await compose.setTemplates([{ keyword: ';lint', text: 'Code lint check passed.' }]);
+
+  // Click directly into the body editor without moving to start/end (may land on signature or existing block)
+  await compose.body.click();
+  await compose.page.waitForTimeout(150);
+  await compose.page.keyboard.type(';lint');
+  await compose.page.waitForTimeout(50);
+  await compose.page.keyboard.press('Tab');
+
+  await expect(compose.body).toContainText('Code lint check passed.');
+  await expect(compose.body).not.toContainText(';lint');
+});
+
 test('Ctrl+Z after expansion brings the keyword back', async ({ compose }) => {
   await compose.setTemplates([{ keyword: ';e2eundo', text: 'Undoable expansion' }]);
 

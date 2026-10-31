@@ -167,9 +167,16 @@ export async function insertContent(
         const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
+        const range = sel.getRangeAt(0).cloneRange();
         const charsAfterMark = countTextAfterCursorMark(astToDom(content.ast, doc), doc);
         const beforeText = editor.textContent ?? '';
         sealUndoGroup(editor);
+        try {
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch {
+          // Ignore selection restore error
+        }
         if (!doc.execCommand('insertHTML', false, htmlContent)) continue;
         if ((editor.textContent ?? '') === beforeText) continue;
 

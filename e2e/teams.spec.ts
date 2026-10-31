@@ -21,6 +21,21 @@ test.describe('Teams (Playground Simulator)', () => {
     await expect(teamsPlayground.editor.locator('ul li')).toHaveCount(2);
   });
 
+  test('Tab expands keyword (;lint) and removes it completely', async ({ teamsPlayground }) => {
+    await teamsPlayground.setTemplates([
+      {
+        keyword: ';lint',
+        text: 'Lint result: 0 errors, 0 warnings',
+        html: '<p>Lint result: 0 errors, 0 warnings</p>',
+      },
+    ]);
+
+    await teamsPlayground.expand(';lint');
+
+    await expect(teamsPlayground.editor).toContainText('Lint result: 0 errors, 0 warnings');
+    await expect(teamsPlayground.editor).not.toContainText(';lint');
+  });
+
   test('Variable expansion replaces date tokens in Teams template', async ({ teamsPlayground }) => {
     await teamsPlayground.setTemplates([
       {
