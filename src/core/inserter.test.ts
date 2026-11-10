@@ -413,4 +413,50 @@ describe('inserter insertContent', () => {
     expect(result.ok).toBe(false);
     expect(editor.textContent).toBe(originalText);
   });
+
+  it('re-applies targetRange after synthetic focus collapses selection in html method', async () => {
+    editor.textContent = 'Hello ;keyword';
+    const textNode = editor.firstChild as Text;
+
+    // Create targetRange covering ';keyword'
+    const targetRange = document.createRange();
+    targetRange.setStart(textNode, 6);
+    targetRange.setEnd(textNode, 14);
+
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(targetRange);
+
+    // Simulate Gmail focus handler: when blur or focus event fires on editor, collapse selection!
+    editor.addEventListener('focusin', () => {
+      sel?.collapseToEnd();
+    });
+
+    let execHtmlCalledWithSelectedRange = false;
+    document.execCommand = vi.fn((cmd: string, showUI: boolean, val?: string) => {
+      if (cmd === 'insertHTML') {
+        const curSel = window.getSelection();
+        // Verify that targetRange was re-applied and selection is NOT collapsed!
+        if (curSel && !curSel.isCollapsed && curSel.toString() === ';keyword') {
+          execHtmlCalledWithSelectedRange = true;
+        }
+        editor.textContent = 'Hello Inserted bold';
+        return true;
+      }
+      return false;
+    });
+
+    const result = await insertContent(
+      editor,
+      mockContent,
+      ['html'],
+      false,
+      false,
+      targetRange
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.method).toBe('html');
+    expect(execHtmlCalledWithSelectedRange).toBe(true);
+  });
 });

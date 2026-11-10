@@ -1,5 +1,5 @@
 import { astToChatText, astToDom, astToPlainText } from './html/ast';
-import { dispatchInput, sleep, waitFor } from './dom';
+import { dispatchInput, isRangeInside, sleep, waitFor } from './dom';
 import { armFallbackUndo, clearFallbackUndo } from './fallback-undo';
 import { tOr } from './i18n';
 import {
@@ -152,7 +152,8 @@ export async function insertContent(
   content: RenderedContent,
   order: InsertMethod[],
   useChatText: boolean,
-  isPlain = false
+  isPlain = false,
+  targetRange?: Range | null
 ): Promise<InsertResult> {
   const plainText = useChatText ? content.chatText : content.text;
   const htmlContent = useChatText && content.chatHtml ? content.chatHtml : content.html;
@@ -169,7 +170,18 @@ export async function insertContent(
 
         const charsAfterMark = countTextAfterCursorMark(astToDom(content.ast, doc), doc);
         const beforeText = editor.textContent ?? '';
+
+        // Close Gmail's typing undo group
         sealUndoGroup(editor);
+
+        // Re-apply targetRange if synthetic focus collapsed or cleared selection.
+        // Gmail collapses selection on focus/focusin, which previously caused
+        // insertHTML to insert AFTER the keyword rather than replacing it!
+        if (targetRange && isRangeInside(editor, targetRange)) {
+          sel.removeAllRanges();
+          sel.addRange(targetRange);
+        }
+
         if (!doc.execCommand('insertHTML', false, htmlContent)) continue;
         if ((editor.textContent ?? '') === beforeText) continue;
 
@@ -184,7 +196,8 @@ export async function insertContent(
         const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
-        const range = sel.getRangeAt(0);
+        const range =
+          targetRange && isRangeInside(editor, targetRange) ? targetRange : sel.getRangeAt(0);
         const domNode = astToDom(content.ast, doc);
         const markedNodes = collectCursorMarkedTextNodes(domNode, doc);
         const insertedNodes = Array.from(domNode.childNodes);

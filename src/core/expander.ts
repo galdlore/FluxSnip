@@ -1,5 +1,5 @@
 import type { PlatformAdapter } from './adapter';
-import { extractTrailingToken, findTemplateByKeyword } from './keyword';
+import { extractTrailingToken, findTemplateMatch } from './keyword';
 import type { Template } from './types';
 
 /**
@@ -33,6 +33,86 @@ function findDeepestRightmostTextNode(node: Node): { node: Text; offset: number 
       const res = findDeepestRightmostTextNode(child);
       if (res) return res;
     }
+  }
+
+  return null;
+}
+
+interface TextChunk {
+  node: Text;
+  startOffset: number;
+  endOffset: number;
+  text: string;
+}
+
+/**
+ * Collects text chunks backwards from caret within the editor to support keywords
+ * that span multiple Text nodes (e.g. Gmail spell check, IME split, or inline span tags).
+ */
+function collectPrecedingTextChunks(
+  startNode: Text,
+  caretOffset: number,
+  editor: HTMLElement,
+  maxChars = 64
+): TextChunk[] {
+  const chunks: TextChunk[] = [];
+  let remainingChars = maxChars;
+
+  const curText = startNode.data.slice(0, caretOffset);
+  chunks.push({
+    node: startNode,
+    startOffset: 0,
+    endOffset: caretOffset,
+    text: curText,
+  });
+  remainingChars -= curText.length;
+
+  if (remainingChars <= 0) return chunks;
+
+  const doc = editor.ownerDocument || document;
+  const walker = doc.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  walker.currentNode = startNode;
+
+  while (walker.previousNode() && remainingChars > 0) {
+    const prev = walker.currentNode as Text;
+    if (!editor.contains(prev)) break;
+    const len = prev.data.length;
+    if (len === 0) continue;
+
+    chunks.unshift({
+      node: prev,
+      startOffset: 0,
+      endOffset: len,
+      text: prev.data,
+    });
+    remainingChars -= len;
+  }
+
+  return chunks;
+}
+
+/**
+ * Resolves Range covering the given character length backwards from the caret.
+ */
+function createRangeForTrailingLength(
+  chunks: TextChunk[],
+  endNode: Text,
+  endOffset: number,
+  targetLength: number
+): Range | null {
+  const range = document.createRange();
+  range.setEnd(endNode, endOffset);
+
+  let remaining = targetLength;
+  for (let i = chunks.length - 1; i >= 0; i--) {
+    const chunk = chunks[i]!;
+    const chunkLen = chunk.text.length;
+    if (remaining <= chunkLen) {
+      const startOffset = chunk.endOffset - remaining;
+      range.setStart(chunk.node, startOffset);
+      return range;
+    }
+    remaining -= chunkLen;
   }
 
   return null;
@@ -72,25 +152,29 @@ export function tryExpand(
     return null;
   }
 
-  const textBefore = textNode.data.slice(0, caretOffset);
-  const token = extractTrailingToken(textBefore);
+  // Collect preceding text (including earlier Text nodes if needed)
+  const chunks = collectPrecedingTextChunks(textNode, caretOffset, editor, 64);
+  const fullTextBefore = chunks.map((c) => c.text).join('');
+  const token = extractTrailingToken(fullTextBefore);
   if (!token) {
     return null;
   }
 
-  const matched = findTemplateByKeyword(token, templates);
-  if (!matched) {
+  const match = findTemplateMatch(token, templates);
+  if (!match) {
     return null;
   }
 
-  // Construct Range covering the token
-  try {
-    const tokenRange = document.createRange();
-    const startOffset = caretOffset - token.length;
-    tokenRange.setStart(textNode, startOffset);
-    tokenRange.setEnd(textNode, caretOffset);
-    return { template: matched, range: tokenRange };
-  } catch {
+  const tokenRange = createRangeForTrailingLength(
+    chunks,
+    textNode,
+    caretOffset,
+    match.matchedToken.length
+  );
+
+  if (!tokenRange) {
     return null;
   }
+
+  return { template: match.template, range: tokenRange };
 }

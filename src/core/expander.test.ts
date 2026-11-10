@@ -131,4 +131,88 @@ describe('expander tryExpand', () => {
     expect(result).toBeNull();
     editor.remove();
   });
+
+  it('expands Japanese keyword and returns correct token range', () => {
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    const textNode = document.createTextNode('いつもお世話になっております。;挨拶');
+    editor.appendChild(textNode);
+    document.body.appendChild(editor);
+
+    const jaTemplates: GmailTemplate[] = [
+      ...templates,
+      {
+        id: '3',
+        platform: 'gmail',
+        name: 'Aisatsu',
+        keyword: ';挨拶',
+        tags: [],
+        bodyHtml: '<p>お世話になっております。</p>',
+        bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'お世話になっております。' }] }],
+        createdAt: 300,
+        updatedAt: 300,
+      },
+    ];
+
+    const range = document.createRange();
+    range.setStart(textNode, textNode.data.length);
+    range.collapse(true);
+
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+
+    const ev = new KeyboardEvent('keydown', { key: 'Tab' });
+    const result = tryExpand(ev, dummyAdapter, editor, jaTemplates);
+
+    expect(result).not.toBeNull();
+    expect(result?.template.keyword).toBe(';挨拶');
+    expect(result?.range.toString()).toBe(';挨拶');
+
+    editor.remove();
+  });
+
+  it('expands keyword that spans multiple Text nodes', () => {
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'true');
+    const span1 = document.createElement('span');
+    span1.appendChild(document.createTextNode(';'));
+    const span2 = document.createElement('span');
+    const text2 = document.createTextNode('挨拶');
+    span2.appendChild(text2);
+    editor.appendChild(span1);
+    editor.appendChild(span2);
+    document.body.appendChild(editor);
+
+    const jaTemplates: GmailTemplate[] = [
+      {
+        id: '3',
+        platform: 'gmail',
+        name: 'Aisatsu',
+        keyword: ';挨拶',
+        tags: [],
+        bodyHtml: '<p>お世話になっております。</p>',
+        bodyAst: [{ t: 'p', c: [{ t: '#text', v: 'お世話になっております。' }] }],
+        createdAt: 300,
+        updatedAt: 300,
+      },
+    ];
+
+    const range = document.createRange();
+    range.setStart(text2, text2.data.length);
+    range.collapse(true);
+
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+
+    const ev = new KeyboardEvent('keydown', { key: 'Tab' });
+    const result = tryExpand(ev, dummyAdapter, editor, jaTemplates);
+
+    expect(result).not.toBeNull();
+    expect(result?.template.keyword).toBe(';挨拶');
+    expect(result?.range.toString()).toBe(';挨拶');
+
+    editor.remove();
+  });
 });

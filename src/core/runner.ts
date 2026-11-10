@@ -100,7 +100,8 @@ export async function runTemplate(
       rendered,
       insertOrder,
       isChat,
-      isPlain
+      isPlain,
+      range
     );
 
     if (!result.ok) {

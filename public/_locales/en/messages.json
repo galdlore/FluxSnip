@@ -20,7 +20,7 @@
     "description": "Validation error when keyword is empty"
   },
   "validate_keyword_invalid": {
-    "message": "Keyword contains invalid characters. Use alphanumeric or _-;:.!/@#",
+    "message": "Keyword format is invalid (1-32 non-whitespace characters).",
     "description": "Validation error when keyword format is invalid"
   },
   "validate_keyword_duplicate": {

@@ -20,7 +20,7 @@
     "description": "キーワードが未入力の場合のエラー"
   },
   "validate_keyword_invalid": {
-    "message": "キーワードの形式が不正です（半角英数記号 _-;:.!/@# のみ、1〜32文字）。",
+    "message": "キーワードの形式が不正です（空白以外の文字・数字・記号で1〜32文字）。",
     "description": "キーワード形式不正のエラー"
   },
   "validate_keyword_duplicate": {

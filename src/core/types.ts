@@ -134,8 +134,8 @@ export interface InsertResult {
 }
 
 /* ---------- Constants ---------- */
-export const KEYWORD_PATTERN = /^[A-Za-z0-9_\-;:.!/@#]{1,32}$/;
-export const KEYWORD_CHAR = /[A-Za-z0-9_\-;:.!/@#]/;
+export const KEYWORD_PATTERN = /^[\p{L}\p{N}\p{M}_\-;:.!/@#\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\u30FB\u30FC]{1,32}$/u;
+export const KEYWORD_CHAR = /[\p{L}\p{N}\p{M}_\-;:.!/@#\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\u30FB\u30FC]/u;
 export const MAX_BODY_HTML_BYTES = 200 * 1024; // per template
 // Private-use character standing in for {{cursor}} inside RenderedContent.ast only
 export const CURSOR_MARK = '\uE002';

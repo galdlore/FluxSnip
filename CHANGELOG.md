@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Support Japanese keywords (Kanji, Hiragana, Katakana, and Japanese symbols).
+- Allow full-width semicolon (；) to match templates registered with half-width semicolon (;).
+- Fix issue where keyword text remained in Gmail body after Tab expansion.
+- Improve Range recovery across multiple Text nodes.
+
 ## 0.1.0
 
 First release of FluxSnip.

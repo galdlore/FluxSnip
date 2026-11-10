@@ -8,6 +8,12 @@ echo   FluxSnip - Store Package Build Pipeline (.zip)
 echo ===================================================
 echo.
 
+REM Clean up any previous zip files in .output
+if exist ".output\*.zip" (
+    echo Cleaning up previous zip packages...
+    del /q ".output\*.zip" >nul 2>&1
+)
+
 echo [1/2] Running tests (npm test)...
 call npm test
 if %ERRORLEVEL% neq 0 (
@@ -28,10 +34,20 @@ if %ERRORLEVEL% neq 0 (
     exit /b %ERRORLEVEL%
 )
 
+REM Find the newly generated zip file in .output
+set "GENERATED_ZIP="
+for %%F in (.output\*.zip) do (
+    set "GENERATED_ZIP=%%~nxF"
+)
+
 echo.
 echo ===================================================
 echo   Store package created successfully!
-echo   Output file: .output\fluxsnip-0.1.0-chrome.zip
+if defined GENERATED_ZIP (
+    echo   Output file: .output\!GENERATED_ZIP!
+) else (
+    echo   Output folder: .output\
+)
 echo ===================================================
 echo.
 

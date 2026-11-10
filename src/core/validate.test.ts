@@ -71,4 +71,16 @@ describe('validateTemplate', () => {
     expect(issues.some((i) => i.field === 'from')).toBe(true);
     expect(issues.some((i) => i.field === 'to')).toBe(true);
   });
+
+  it('accepts Japanese keywords and symbols', () => {
+    const t = newTemplate('gmail') as GmailTemplate;
+    t.name = 'あいさつ';
+    t.keyword = ';挨拶';
+    const issues = validateTemplate(t, []);
+    expect(issues.some((i) => i.field === 'keyword')).toBe(false);
+
+    t.keyword = '；お疲れ様ですー';
+    const issuesZenkaku = validateTemplate(t, []);
+    expect(issuesZenkaku.some((i) => i.field === 'keyword')).toBe(false);
+  });
 });
