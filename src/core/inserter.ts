@@ -168,20 +168,23 @@ export async function insertContent(
         const sel = win.getSelection();
         if (!sel || sel.rangeCount === 0) continue;
 
+        const range = sel.getRangeAt(0).cloneRange();
         const charsAfterMark = countTextAfterCursorMark(astToDom(content.ast, doc), doc);
         const beforeText = editor.textContent ?? '';
 
         // Close Gmail's typing undo group
         sealUndoGroup(editor);
-
-        // Re-apply targetRange if synthetic focus collapsed or cleared selection.
+        // Re-apply targetRange (or fallback cloned range) if synthetic focus collapsed or cleared selection.
         // Gmail collapses selection on focus/focusin, which previously caused
         // insertHTML to insert AFTER the keyword rather than replacing it!
-        if (targetRange && isRangeInside(editor, targetRange)) {
+        try {
+          const effectiveRange =
+            targetRange && isRangeInside(editor, targetRange) ? targetRange : range;
           sel.removeAllRanges();
-          sel.addRange(targetRange);
+          sel.addRange(effectiveRange);
+        } catch {
+          // Ignore selection restore error
         }
-
         if (!doc.execCommand('insertHTML', false, htmlContent)) continue;
         if ((editor.textContent ?? '') === beforeText) continue;
 
